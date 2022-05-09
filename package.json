@@ -1,0 +1,26 @@
+{
+  "name": "kuber_trading_engine_nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p ./",
+    "start": "node build/index",
+    "listen": "npm run build && npm run start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://yashpriyam@github.com/Indra-Capital/kuber_trading_engine_nodejs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ccxt.pro": "git+https://yashpriaym@github.com/kroitor/ccxt.pro.git",
+    "typescript": "^4.6.4"
+  },
+  "bugs": {
+    "url": "https://github.com/Indra-Capital/kuber_trading_engine_nodejs/issues"
+  },
+  "homepage": "https://github.com/Indra-Capital/kuber_trading_engine_nodejs#readme"
+}

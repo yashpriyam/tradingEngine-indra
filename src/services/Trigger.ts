@@ -22,25 +22,29 @@ class Trigger {
     for await (let orderBookPriceMap of orderBookGenerator) {
       console.log({ priceOrderMap: orderBookPriceMap });
 
-      for (const askPriceExchangeKey in orderBookPriceMap) {
-        let askPrice: number = orderBookPriceMap[askPriceExchangeKey].askPrice;
+      for (const symbol in orderBookPriceMap) {
+        for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
+          let askPrice: number =
+            orderBookPriceMap[symbol][askPriceExchangeKey].askPrice;
 
-        for (const bidPriceExchangeKey in orderBookPriceMap) {
-          if (askPriceExchangeKey === bidPriceExchangeKey) continue;
+          for (const bidPriceExchangeKey in orderBookPriceMap[symbol]) {
+            if (askPriceExchangeKey === bidPriceExchangeKey) continue;
 
-          let bidPrice: number =
-            orderBookPriceMap[bidPriceExchangeKey].bidPrice;
+            let bidPrice: number =
+              orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
 
-          if (this.checkCondition(askPrice, bidPrice)) {
-            this.actions.forEach((singleAction) => {
-              singleAction.excuteAction({
-                askPriceExchange: askPriceExchangeKey,
-                bidPriceExchange: bidPriceExchangeKey,
-                message: "Percentage differnce is greater than 1.0",
+            if (this.checkCondition(askPrice, bidPrice)) {
+              this.actions.forEach((singleAction) => {
+                singleAction.excuteAction({
+                  symbol,
+                  askPriceExchange: askPriceExchangeKey,
+                  bidPriceExchange: bidPriceExchangeKey,
+                  message: "Percentage differnce is greater than 1.0",
+                });
               });
-            });
-          } else {
-            console.log("Pecentage differnce is not greater than 1.0");
+            } else {
+              console.log("Pecentage differnce is not greater than 1.0");
+            }
           }
         }
       }

@@ -67,50 +67,73 @@ class ExchangeData {
         this.websocketUrls = baseUrls;
         this.orderBookPriceMap = {};
         this.orderBookFromUrls();
+        this.symbols = ["BTC/USDT", "ETH/USDT", "ETH/BTC"];
     }
     // from ccxt pro
     orderBookFromCCXT() {
         return __asyncGenerator(this, arguments, function* orderBookFromCCXT_1() {
-            for (const exchangeName of this.ccxtExchanges) {
-                const exchange = new ccxt_pro_1.default[exchangeName]({ enableRateLimit: true });
-                const orderbookData = yield __await(exchange.watchOrderBooks(["ETH/USDT"]));
-                this.orderBookPriceMap[exchangeName] = {};
-                this.orderBookPriceMap[exchangeName]["askPrice"] =
-                    orderbookData["asks"][0][0];
-                this.orderBookPriceMap[exchangeName]["bidPrice"] =
-                    orderbookData["bids"][0][0];
-                yield yield __await(this.orderBookPriceMap);
+            for (const symbol of this.symbols) {
+                if (!this.orderBookPriceMap[symbol])
+                    this.orderBookPriceMap[symbol] = {};
+                for (const exchangeName of this.ccxtExchanges) {
+                    const exchange = new ccxt_pro_1.default[exchangeName]({ enableRateLimit: true });
+                    let orderbookData = {};
+                    try {
+                        orderbookData = yield __await(exchange.watchOrderBook(symbol));
+                    }
+                    catch (error) {
+                        console.error({ error });
+                        continue;
+                    }
+                    if (!this.orderBookPriceMap[symbol][exchangeName])
+                        this.orderBookPriceMap[symbol][exchangeName] = {};
+                    this.orderBookPriceMap[symbol][exchangeName]["askPrice"] =
+                        orderbookData["asks"][0][0];
+                    this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
+                        orderbookData["bids"][orderbookData["bids"].length - 1][0];
+                    yield yield __await(this.orderBookPriceMap);
+                }
             }
         });
     }
     // get order book data from websocket Urls
     orderBookFromUrls() {
         return __awaiter(this, void 0, void 0, function* () {
-            for (let url of this.websocketUrls) {
+            for (let { url, exchangeName } of this.websocketUrls) {
                 this._ws = new WebSocket.default(url);
                 this._ws.onopen = () => {
                     console.log("connected");
-                    this._ws.send(JSON.stringify({
-                        id: 11,
-                        method: "subscribe",
-                        params: {
-                            channels: ["book.ETH_USDT.10"],
-                        },
-                    }));
+                    for (const symbol of this.symbols) {
+                        let id = 1;
+                        this._ws.send(JSON.stringify({
+                            id: id++,
+                            method: "subscribe",
+                            params: {
+                                channels: [`book.${symbol.split("/").join("_")}.10`],
+                            },
+                        }));
+                    }
                 };
                 this._ws.onmessage = (msg) => {
                     const message = JSON.parse(msg.data);
-                    let data = message.result && message.result.data[0];
-                    if (data &&
-                        data.asks &&
-                        data.bids &&
-                        data.asks.length > 0 &&
-                        data.bids.length > 0) {
-                        let askPrice = data.asks[0][0];
-                        let bidPrice = data.bids[0][0];
-                        this.orderBookPriceMap["cryptoCom"] = {};
-                        this.orderBookPriceMap["cryptoCom"]["askPrice"] = askPrice;
-                        this.orderBookPriceMap["cryptoCom"]["bidPrice"] = bidPrice;
+                    if (message.result) {
+                        const data = message.result.data[0];
+                        let symbol = message.result && message.result.instrument_name;
+                        symbol = symbol.split("_").join("/");
+                        if (!this.orderBookPriceMap[symbol])
+                            this.orderBookPriceMap[symbol] = {};
+                        if (data &&
+                            data.asks &&
+                            data.bids &&
+                            data.asks.length > 0 &&
+                            data.bids.length > 0) {
+                            let askPrice = data.asks[0][0];
+                            let bidPrice = data.bids[0][0];
+                            if (!this.orderBookPriceMap[symbol][exchangeName])
+                                this.orderBookPriceMap[symbol][exchangeName] = {};
+                            this.orderBookPriceMap[symbol][exchangeName]["askPrice"] = askPrice;
+                            this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] = bidPrice;
+                        }
                     }
                 };
             }
@@ -119,10 +142,29 @@ class ExchangeData {
     getOrderBookData() {
         return __asyncGenerator(this, arguments, function* getOrderBookData_1() {
             while (true) {
-                // yield this.orderBookPriceMap;
                 yield __await(yield* __asyncDelegator(__asyncValues(this.orderBookFromCCXT())));
             }
         });
     }
 }
 exports.default = ExchangeData;
+/*
+
+
+
+{
+  "Eth/usdt" :{
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
+  },
+
+  "btc/usdt" :{
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
+  },
+  
+} */

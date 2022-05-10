@@ -16,6 +16,8 @@ const exchangesName = [
 ];
 let cryptoComUrl = "wss://uat-stream.3ona.co/v2/market";
 const LogAction = new Action_1.default(console.log);
-const orderBookData = new ExchangeData_1.default(exchangesName, [cryptoComUrl]);
+const orderBookData = new ExchangeData_1.default(exchangesName, [
+    { exchangeName: "cryptocom", url: cryptoComUrl },
+]);
 const orderbookTrigger = new Trigger_1.default(orderBookData, [LogAction], checkArbitrage_1.default);
 orderbookTrigger.getOrderBookData();

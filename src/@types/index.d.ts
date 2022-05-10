@@ -1,5 +1,7 @@
 type orderBookPriceMap = {
   [key: string]: {
-    [key: string]: number;
+    [key: string]: {
+      [key: string]: number;
+    };
   };
 };

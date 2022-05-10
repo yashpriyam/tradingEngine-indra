@@ -16,7 +16,9 @@ let cryptoComUrl: string = "wss://uat-stream.3ona.co/v2/market";
 
 const LogAction = new Action(console.log);
 
-const orderBookData = new ExchangeData(exchangesName, [cryptoComUrl]);
+const orderBookData = new ExchangeData(exchangesName, [
+  { exchangeName: "cryptocom", url: cryptoComUrl },
+]);
 
 const orderbookTrigger = new Trigger(
   orderBookData,
@@ -27,7 +29,6 @@ const orderbookTrigger = new Trigger(
 orderbookTrigger.getOrderBookData();
 
 /* 
-
 
 Trigger class always have three arguments  
 ([] of data source/price oracle instances, array of actions, conditions)

@@ -3,46 +3,45 @@ import ExchangeData from "./ExchangeData";
 
 class Trigger {
   exchangeData: ExchangeData;
-  orderBookPriceMap: orderBookPriceMap;
-  action: Action;
-  checkForArbitrage: Function;
+  actions: Action[];
+  checkCondition: Function;
 
   constructor(
-    checkForArbitrage: Function,
     exchangeData: ExchangeData,
-    action: Action
+    actions: Action[],
+    checkCondition: Function
   ) {
     this.exchangeData = exchangeData;
-    this.orderBookPriceMap = {};
-    this.action = action;
-    this.checkForArbitrage = checkForArbitrage;
+    this.actions = actions;
+    this.checkCondition = checkCondition;
   }
 
   async getOrderBookData() {
-    try {
-      this.orderBookPriceMap = await this.exchangeData.watchOrderBookData();
-    } catch (error) {
-      console.error({ error });
-    }
+    let orderBookGenerator = this.exchangeData.getOrderBookData();
 
-    console.log({ priceOrderMap: this.orderBookPriceMap });
+    for await (let orderBookPriceMap of orderBookGenerator) {
+      console.log({ priceOrderMap: orderBookPriceMap });
 
-    for (const askPriceExchangeKey in this.orderBookPriceMap) {
-      let askPrice: number =
-        this.orderBookPriceMap[askPriceExchangeKey].askPrice;
+      for (const askPriceExchangeKey in orderBookPriceMap) {
+        let askPrice: number = orderBookPriceMap[askPriceExchangeKey].askPrice;
 
-      for (const bidPriceExchangeKey in this.orderBookPriceMap) {
-        let bidPrice: number =
-          this.orderBookPriceMap[bidPriceExchangeKey].bidPrice;
+        for (const bidPriceExchangeKey in orderBookPriceMap) {
+          if (askPriceExchangeKey === bidPriceExchangeKey) continue;
 
-        if (this.checkForArbitrage(askPrice, bidPrice)) {
-          this.action.excuteAction({
-            askPriceExchange: askPriceExchangeKey,
-            bidPriceExchange: bidPriceExchangeKey,
-            message: "Percentage differnce is greater than 1.0",
-          });
-        } else {
-          console.log("Pecentage differnce is not greater than 1.0");
+          let bidPrice: number =
+            orderBookPriceMap[bidPriceExchangeKey].bidPrice;
+
+          if (this.checkCondition(askPrice, bidPrice)) {
+            this.actions.forEach((singleAction) => {
+              singleAction.excuteAction({
+                askPriceExchange: askPriceExchangeKey,
+                bidPriceExchange: bidPriceExchangeKey,
+                message: "Percentage differnce is greater than 1.0",
+              });
+            });
+          } else {
+            console.log("Pecentage differnce is not greater than 1.0");
+          }
         }
       }
     }

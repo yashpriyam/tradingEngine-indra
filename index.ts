@@ -4,27 +4,39 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import ExchangeData from "./src/services/ExchangeData";
 import Trigger from "./src/services/Trigger";
 
-(async () => {
-  const exchangesName: string[] = [
-    "binance",
-    "bitfinex",
-    "ftx",
-    "bittrex",
-    "kucoin",
-  ];
+const exchangesName: string[] = [
+  "binance",
+  "bitfinex",
+  "ftx",
+  "bittrex",
+  "kucoin",
+];
 
-  const LogAction = new Action(console.log);
+let cryptoComUrl: string = "wss://uat-stream.3ona.co/v2/market";
 
-  const orderBookData = new ExchangeData(exchangesName);
+const LogAction = new Action(console.log);
 
-  // const orderBookPriceMap = await orderBookData.watchOrderBookData();
-  // console.log({ orderBookPriceMap });
+const orderBookData = new ExchangeData(exchangesName, [cryptoComUrl]);
+
+const orderbookTrigger = new Trigger(
+  orderBookData,
+  [LogAction],
+  checkForArbitrage
+);
+
+orderbookTrigger.getOrderBookData();
+
+/* 
+
+
+Trigger class always have three arguments  
+([] of data source/price oracle instances, array of actions, conditions)
+
 
   const orderbookTrigger = new Trigger(
-    checkForArbitrage,
-    orderBookData,
-    LogAction
+    [orderBookData],
+    [LogAction, apiCallAction],
+    conditionFunction
   );
 
-  await orderbookTrigger.getOrderBookData();
-})();
+*/

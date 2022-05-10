@@ -8,38 +8,56 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 class Trigger {
-    constructor(checkForArbitrage, exchangeData, action) {
+    constructor(exchangeData, actions, checkCondition) {
         this.exchangeData = exchangeData;
-        this.orderBookPriceMap = {};
-        this.action = action;
-        this.checkForArbitrage = checkForArbitrage;
+        this.actions = actions;
+        this.checkCondition = checkCondition;
     }
     getOrderBookData() {
+        var e_1, _a;
         return __awaiter(this, void 0, void 0, function* () {
+            let orderBookGenerator = this.exchangeData.getOrderBookData();
             try {
-                this.orderBookPriceMap = yield this.exchangeData.watchOrderBookData();
-            }
-            catch (error) {
-                console.error({ error });
-            }
-            console.log({ priceOrderMap: this.orderBookPriceMap });
-            for (const askPriceExchangeKey in this.orderBookPriceMap) {
-                let askPrice = this.orderBookPriceMap[askPriceExchangeKey].askPrice;
-                for (const bidPriceExchangeKey in this.orderBookPriceMap) {
-                    let bidPrice = this.orderBookPriceMap[bidPriceExchangeKey].bidPrice;
-                    if (this.checkForArbitrage(askPrice, bidPrice)) {
-                        this.action.excuteAction({
-                            askPriceExchange: askPriceExchangeKey,
-                            bidPriceExchange: bidPriceExchangeKey,
-                            message: "Percentage differnce is greater than 1.0",
-                        });
-                    }
-                    else {
-                        console.log("Pecentage differnce is not greater than 1.0");
+                for (var orderBookGenerator_1 = __asyncValues(orderBookGenerator), orderBookGenerator_1_1; orderBookGenerator_1_1 = yield orderBookGenerator_1.next(), !orderBookGenerator_1_1.done;) {
+                    let orderBookPriceMap = orderBookGenerator_1_1.value;
+                    console.log({ priceOrderMap: orderBookPriceMap });
+                    for (const askPriceExchangeKey in orderBookPriceMap) {
+                        let askPrice = orderBookPriceMap[askPriceExchangeKey].askPrice;
+                        for (const bidPriceExchangeKey in orderBookPriceMap) {
+                            if (askPriceExchangeKey === bidPriceExchangeKey)
+                                continue;
+                            let bidPrice = orderBookPriceMap[bidPriceExchangeKey].bidPrice;
+                            if (this.checkCondition(askPrice, bidPrice)) {
+                                this.actions.forEach((singleAction) => {
+                                    singleAction.excuteAction({
+                                        askPriceExchange: askPriceExchangeKey,
+                                        bidPriceExchange: bidPriceExchangeKey,
+                                        message: "Percentage differnce is greater than 1.0",
+                                    });
+                                });
+                            }
+                            else {
+                                console.log("Pecentage differnce is not greater than 1.0");
+                            }
+                        }
                     }
                 }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (orderBookGenerator_1_1 && !orderBookGenerator_1_1.done && (_a = orderBookGenerator_1.return)) yield _a.call(orderBookGenerator_1);
+                }
+                finally { if (e_1) throw e_1.error; }
             }
         });
     }

@@ -12,12 +12,19 @@ const exchangesName: string[] = [
   "kucoin",
 ];
 
-let cryptoComUrl: string = "wss://uat-stream.3ona.co/v2/market";
+let cryptoComUrl: string = "wss://stream.crypto.com/v2/market";
 
 const LogAction = new Action(console.log);
 
 const orderBookData = new ExchangeData(exchangesName, [
-  { exchangeName: "cryptocom", url: cryptoComUrl },
+  {
+    exchangeName: "cryptocom",
+    url: cryptoComUrl,
+    dataFormat: {
+      symbol: "result.instrument_name",
+      orderbookData: "result.data",
+    },
+  },
 ]);
 
 const orderbookTrigger = new Trigger(

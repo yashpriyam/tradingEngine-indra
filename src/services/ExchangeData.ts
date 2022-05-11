@@ -32,6 +32,11 @@ class ExchangeData {
           continue;
         }
 
+        // console.log({
+        //   askccxt: orderbookData["asks"],
+        //   bidccxt: orderbookData["bids"],
+        // });
+
         if (!this.orderBookPriceMap[symbol][exchangeName])
           this.orderBookPriceMap[symbol][exchangeName] = {};
 
@@ -48,7 +53,7 @@ class ExchangeData {
 
   // get order book data from websocket Urls
   async orderBookFromUrls() {
-    for (let { url, exchangeName } of this.websocketUrls) {
+    for (let { url, exchangeName, dataFormat } of this.websocketUrls) {
       this._ws = new WebSocket.default(url);
 
       this._ws.onopen = () => {
@@ -60,7 +65,7 @@ class ExchangeData {
               id: id++,
               method: "subscribe",
               params: {
-                channels: [`book.${symbol.split("/").join("_")}.10`],
+                channels: [`book.${symbol.split("/").join("_")}.20`],
               },
             })
           );
@@ -87,7 +92,20 @@ class ExchangeData {
             data.bids.length > 0
           ) {
             let askPrice: number = data.asks[0][0];
-            let bidPrice: number = data.bids[0][0];
+            let bidPrice: number = data.bids[data.bids.length - 1][0];
+
+            // console.log({ ask: data.asks });
+            // console.log({ bids: data.bids });
+
+            // let formattedData = {
+            //   symbol: this.getPathValue(message, dataFormat.symbol),
+            //   orderbookData: this.getPathValue(
+            //     message,
+            //     dataFormat.orderbookData
+            //   ),
+            // };
+
+            // console.log(formattedData.orderbookData);
 
             if (!this.orderBookPriceMap[symbol][exchangeName])
               this.orderBookPriceMap[symbol][exchangeName] = {};

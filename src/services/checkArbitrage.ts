@@ -8,8 +8,7 @@ function checkForArbitrage(askPrice: number, bidPrice: number): boolean {
 
     console.log({ percentage_diffr });
 
-    if (percentage_diffr >= 1) return true;
-    else return false;
+    return percentage_diffr >= 1;
   }
 }
 

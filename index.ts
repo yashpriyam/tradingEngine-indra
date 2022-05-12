@@ -6,14 +6,24 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import ExchangeData from "./src/services/ExchangeData";
 import Trigger from "./src/services/Trigger";
 
+const logger = require('logzio-nodejs').createLogger({
+  token: 'wTMYrprFKilxYbGKaCGvUrOFOGYORNyy',
+  protocol: 'https',
+  host: 'listener.logz.io',
+  port: '8071',
+  type: 'elasticsearch'
+});
+
+export const orderBookPriceMap: orderBookPriceMap = {}
+
 const totalCPUs = os.cpus().length;
 
 const exchangesName: string[] = [
-  "binance",
+  // "binance",
   "bitfinex",
   "ftx",
   "bittrex",
-  "kucoin",
+  // "kucoin",
 ];
 
 // if (cluster.isPrimary) {
@@ -30,6 +40,7 @@ const exchangesName: string[] = [
 let cryptoComUrl: string = "wss://stream.crypto.com/v2/market";
 
 const LogAction = new Action(console.log);
+const LogzIOAction = new Action(logger.log);
 
 const orderBookData = new ExchangeData(exchangesName, [
   {
@@ -44,7 +55,7 @@ const orderBookData = new ExchangeData(exchangesName, [
 
 const orderbookTrigger = new Trigger(
   orderBookData,
-  [LogAction],
+  [LogAction, LogzIOAction],
   checkForArbitrage
 );
 

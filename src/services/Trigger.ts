@@ -49,10 +49,10 @@ class Trigger {
                 });
               });
             } else {
-              console.log("Pecentage differnce is not greater than 1.0");
+              // console.log("Pecentage differnce is not greater than 1.0");
             }
           } else {
-            console.log({ askPrice, bidPrice });
+            // console.log({ askPrice, bidPrice });
           }
         }
       }

@@ -1,22 +1,23 @@
-import ccxtpro from "ccxt.pro";
+// import ccxtpro from "ccxt.pro";
 import * as WebSocket from "ws";
 import { fork } from "child_process";
 
 import cluster from "cluster";
 import os from "os";
+import { orderBookPriceMap } from '../..'
 const totalCPUs = os.cpus().length;
 
 class ExchangeData {
   ccxtExchanges: string[];
   websocketUrls: any[];
-  orderBookPriceMap: orderBookPriceMap;
+  // orderBookPriceMap: orderBookPriceMap;
   _ws: any;
   symbols: string[];
 
   constructor(exchanges: string[], baseUrls: any[]) {
     this.ccxtExchanges = exchanges;
     this.websocketUrls = baseUrls;
-    this.orderBookPriceMap = {};
+    // orderBookPriceMap = {};
     this.orderBookFromUrls();
     this.symbols = ["BTC/USDT", "ETH/USDT", "ETH/BTC"];
     // this.createCluster();
@@ -36,62 +37,72 @@ class ExchangeData {
   }
 
   // from ccxt pro
-  async *orderBookFromCCXT() {
-    for (const exchangeName of this.ccxtExchanges) {
-      const exchange = new ccxtpro[exchangeName]({ enableRateLimit: true });
+  async *orderBookFromCCXT(exchangeName: string) {
+    // for (const exchangeName of this.ccxtExchanges) {
 
-      // console.log({ exchange });
+    console.log({ exchangeName });
 
-      try {
-        const childProcess = fork("./src/services/callApi.js");
+    try {
 
-        childProcess.send({
-          watchOrderBook: exchange.watchOrderBook.toString(),
-        });
-        // console.log(exchange.watchOrderBook);
+      const forkedProcess = fork(`${__dirname}/callApi.js`)
+      // const exchange = new ccxtpro[exchangeName]({ enableRateLimit: true });
+      forkedProcess.send({
+        exchangeName,
+        // orderBookPriceMap: orderBookPriceMap
+      });
+      // let thisArg = this
+      // console.log({message: thisArg.orderBookPriceMap})
+      forkedProcess.on("message", function* cb(message: string) {
+        console.log({ message })
+        yield orderBookPriceMap;
+      });
+      // const childProcess = fork("./src/services/callApi.js");
 
-        childProcess.on("message", (message: any) => console.log(message));
 
-        let symbols = Object.keys(await exchange.loadMarkets());
+      // console.log(exchange.watchOrderBook);
 
-        for (const symbol of symbols) {
-          if (!this.orderBookPriceMap[symbol])
-            this.orderBookPriceMap[symbol] = {};
+      // forkedProcess.on("message", (message: any) => console.log(message));
 
-          let orderbookData = {};
+      // let symbols = Object.keys(await exchange.loadMarkets());
 
-          try {
-            console.log({ symbol });
+      // for (const symbol of symbols) {
+      //   if (!orderBookPriceMap[symbol])
+      //     orderBookPriceMap[symbol] = {};
 
-            orderbookData = await exchange.watchOrderBook(symbol);
+      //   let orderbookData = {};
 
-            if (!this.orderBookPriceMap[symbol][exchangeName])
-              this.orderBookPriceMap[symbol][exchangeName] = {};
+      //   try {
+      //     console.log({ symbol });
 
-            if (
-              !orderbookData ||
-              orderbookData["asks"].length == 0 ||
-              orderbookData["bids"].length == 0
-            )
-              continue;
+      //     orderbookData = await exchange.watchOrderBook(symbol);
 
-            this.orderBookPriceMap[symbol][exchangeName]["askPrice"] =
-              orderbookData["asks"][0][0];
+      //     if (!orderBookPriceMap[symbol][exchangeName])
+      //       orderBookPriceMap[symbol][exchangeName] = {};
 
-            this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
-              orderbookData["bids"][orderbookData["bids"].length - 1][0];
+      //     if (
+      //       !orderbookData ||
+      //       orderbookData["asks"].length == 0 ||
+      //       orderbookData["bids"].length == 0
+      //     )
+      //       continue;
 
-            yield this.orderBookPriceMap;
-          } catch (error) {
-            console.error({ error });
-            continue;
-          }
-        }
-      } catch (error) {
-        console.error({ error });
-        continue;
-      }
+      //     orderBookPriceMap[symbol][exchangeName]["askPrice"] =
+      //       orderbookData["asks"][0][0];
+
+      //     orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
+      //       orderbookData["bids"][orderbookData["bids"].length - 1][0];
+
+      // yield orderBookPriceMap;
+      //   } catch (error) {
+      //     console.error({ error });
+      //     continue;
+      //   }
+      // }
+    } catch (error) {
+      console.error({ error });
+      // continue
     }
+    // }
   }
 
   // get order book data from websocket Urls
@@ -124,8 +135,8 @@ class ExchangeData {
           let symbol = message.result && message.result.instrument_name;
           symbol = symbol.split("_").join("/");
 
-          if (!this.orderBookPriceMap[symbol])
-            this.orderBookPriceMap[symbol] = {};
+          if (!orderBookPriceMap[symbol])
+            orderBookPriceMap[symbol] = {};
 
           if (
             data &&
@@ -150,12 +161,12 @@ class ExchangeData {
 
             // console.log(formattedData.orderbookData);
 
-            if (!this.orderBookPriceMap[symbol][exchangeName])
-              this.orderBookPriceMap[symbol][exchangeName] = {};
+            if (!orderBookPriceMap[symbol][exchangeName])
+              orderBookPriceMap[symbol][exchangeName] = {};
 
-            this.orderBookPriceMap[symbol][exchangeName]["askPrice"] = askPrice;
+            orderBookPriceMap[symbol][exchangeName]["askPrice"] = askPrice;
 
-            this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] = bidPrice;
+            orderBookPriceMap[symbol][exchangeName]["bidPrice"] = bidPrice;
           }
         }
       };
@@ -163,15 +174,17 @@ class ExchangeData {
   }
 
   async *getOrderBookData() {
-    while (true) {
-      yield* this.orderBookFromCCXT();
+    for (const exchangeName of this.ccxtExchanges) {
+      // while (true) {
+        yield* this.orderBookFromCCXT(exchangeName);
+      // }
     }
   }
 }
 
 export default ExchangeData;
 
-/* 
+/*
 
 
 
@@ -209,5 +222,5 @@ export default ExchangeData;
       bidPrice : n
     }
   },
-  
+
 } */

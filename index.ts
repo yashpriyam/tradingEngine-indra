@@ -1,8 +1,12 @@
 "use strict";
+import cluster from "cluster";
+import os from "os";
 import Action from "./src/services/Action";
 import checkForArbitrage from "./src/services/checkArbitrage";
 import ExchangeData from "./src/services/ExchangeData";
 import Trigger from "./src/services/Trigger";
+
+const totalCPUs = os.cpus().length;
 
 const exchangesName: string[] = [
   "binance",
@@ -11,6 +15,17 @@ const exchangesName: string[] = [
   "bittrex",
   "kucoin",
 ];
+
+// if (cluster.isPrimary) {
+//   console.log(`Number of CPUs is ${totalCPUs}`);
+//   console.log(`Master ${process.pid} is running`);
+
+//   for (let i = 0; i < totalCPUs; i++) {
+//     cluster.fork();
+//   }
+// } else {
+//   console.log(`Worker ${process.pid} started`);
+// }
 
 let cryptoComUrl: string = "wss://stream.crypto.com/v2/market";
 

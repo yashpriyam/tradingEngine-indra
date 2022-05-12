@@ -1,5 +1,10 @@
 import ccxtpro from "ccxt.pro";
 import * as WebSocket from "ws";
+import { fork } from "child_process";
+
+import cluster from "cluster";
+import os from "os";
+const totalCPUs = os.cpus().length;
 
 class ExchangeData {
   ccxtExchanges: string[];
@@ -14,39 +19,77 @@ class ExchangeData {
     this.orderBookPriceMap = {};
     this.orderBookFromUrls();
     this.symbols = ["BTC/USDT", "ETH/USDT", "ETH/BTC"];
+    // this.createCluster();
+  }
+
+  createCluster() {
+    if (cluster.isPrimary) {
+      console.log(`Number of CPUs is ${totalCPUs}`);
+      console.log(`Master ${process.pid} is running`);
+
+      for (let i = 0; i < totalCPUs; i++) {
+        cluster.fork();
+      }
+    } else {
+      console.log(`Worker ${process.pid} started`);
+    }
   }
 
   // from ccxt pro
   async *orderBookFromCCXT() {
-    for (const symbol of this.symbols) {
-      if (!this.orderBookPriceMap[symbol]) this.orderBookPriceMap[symbol] = {};
+    for (const exchangeName of this.ccxtExchanges) {
+      const exchange = new ccxtpro[exchangeName]({ enableRateLimit: true });
 
-      for (const exchangeName of this.ccxtExchanges) {
-        const exchange = new ccxtpro[exchangeName]({ enableRateLimit: true });
+      // console.log({ exchange });
 
-        let orderbookData = {};
-        try {
-          orderbookData = await exchange.watchOrderBook(symbol);
-        } catch (error) {
-          console.error({ error });
-          continue;
+      try {
+        const childProcess = fork("./src/services/callApi.js");
+
+        childProcess.send({
+          watchOrderBook: exchange.watchOrderBook.toString(),
+        });
+        // console.log(exchange.watchOrderBook);
+
+        childProcess.on("message", (message: any) => console.log(message));
+
+        let symbols = Object.keys(await exchange.loadMarkets());
+
+        for (const symbol of symbols) {
+          if (!this.orderBookPriceMap[symbol])
+            this.orderBookPriceMap[symbol] = {};
+
+          let orderbookData = {};
+
+          try {
+            console.log({ symbol });
+
+            orderbookData = await exchange.watchOrderBook(symbol);
+
+            if (!this.orderBookPriceMap[symbol][exchangeName])
+              this.orderBookPriceMap[symbol][exchangeName] = {};
+
+            if (
+              !orderbookData ||
+              orderbookData["asks"].length == 0 ||
+              orderbookData["bids"].length == 0
+            )
+              continue;
+
+            this.orderBookPriceMap[symbol][exchangeName]["askPrice"] =
+              orderbookData["asks"][0][0];
+
+            this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
+              orderbookData["bids"][orderbookData["bids"].length - 1][0];
+
+            yield this.orderBookPriceMap;
+          } catch (error) {
+            console.error({ error });
+            continue;
+          }
         }
-
-        // console.log({
-        //   askccxt: orderbookData["asks"],
-        //   bidccxt: orderbookData["bids"],
-        // });
-
-        if (!this.orderBookPriceMap[symbol][exchangeName])
-          this.orderBookPriceMap[symbol][exchangeName] = {};
-
-        this.orderBookPriceMap[symbol][exchangeName]["askPrice"] =
-          orderbookData["asks"][0][0];
-
-        this.orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
-          orderbookData["bids"][orderbookData["bids"].length - 1][0];
-
-        yield this.orderBookPriceMap;
+      } catch (error) {
+        console.error({ error });
+        continue;
       }
     }
   }
@@ -134,6 +177,26 @@ export default ExchangeData;
 
 {
   "Eth/usdt" :{
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    },
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
+    "exchange" :{
+      askPrice: number,
+      bidPrice : n
+    }
     "exchange" :{
       askPrice: number,
       bidPrice : n

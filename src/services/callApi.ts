@@ -7,7 +7,7 @@ import ccxtpro from "ccxt.pro";
 //   type: 'elasticsearch'
 // });
 // logger.log(orderBookPriceMap);
-import { orderBookPriceMap } from '../..'
+import { orderBookPriceMap } from "../..";
 
 process.on("message", async (message: { exchangeName: string }) => {
   // console.log({ message });
@@ -19,10 +19,10 @@ process.on("message", async (message: { exchangeName: string }) => {
 
   let symbols = Object.keys(await exchange.loadMarkets());
   for (const symbol of symbols) {
-    console.log({symbol});
-    
-    await infinteWhileLoop(symbol)
-    console.log('after', {symbol});
+    console.log({ symbol });
+
+    await infinteWhileLoop(symbol);
+    console.log("after", { symbol });
   }
 
   async function infinteWhileLoop(symbol: string) {
@@ -33,32 +33,31 @@ process.on("message", async (message: { exchangeName: string }) => {
     try {
       // console.log({ symbol });
 
-      while (true) {
-        orderbookData = await exchange.watchOrderBook(symbol);
-        // console.log({orderbookData});
+      // while (true) {
+      orderbookData = await exchange.watchOrderBook(symbol);
+      // console.log({orderbookData});
 
+      if (!orderBookPriceMap[symbol][exchangeName])
+        orderBookPriceMap[symbol][exchangeName] = {};
 
-        if (!orderBookPriceMap[symbol][exchangeName])
-          orderBookPriceMap[symbol][exchangeName] = {};
+      if (
+        !orderbookData ||
+        orderbookData["asks"].length === 0 ||
+        orderbookData["bids"].length === 0
+      )
+        // continue;
 
-        if (
-          !orderbookData ||
-          orderbookData["asks"].length === 0 ||
-          orderbookData["bids"].length === 0
-        )
-          // continue;
+        orderBookPriceMap[symbol][exchangeName]["askPrice"] =
+          orderbookData["asks"][0][0];
 
-          orderBookPriceMap[symbol][exchangeName]["askPrice"] =
-            orderbookData["asks"][0][0];
+      orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
+        orderbookData["bids"][orderbookData["bids"].length - 1][0];
+      console.log({ orderBookPriceMap });
+      // logger.log(orderBookPriceMap);
 
-        orderBookPriceMap[symbol][exchangeName]["bidPrice"] =
-          orderbookData["bids"][orderbookData["bids"].length - 1][0];
-        console.log({ orderBookPriceMap });
-        // logger.log(orderBookPriceMap);
-
-        // sendingProcess(orderBookPriceMap)
-        process.send?.({ orderBookPriceMap });
-      }
+      // sendingProcess(orderBookPriceMap)
+      process.send?.({ orderBookPriceMap });
+      // }
       // yield orderBookPriceMap;
     } catch (error) {
       console.error({ error });
@@ -67,7 +66,6 @@ process.on("message", async (message: { exchangeName: string }) => {
   }
 
   // process.send("some string from outside");
-
 
   // function sendingProcess (data: orderBookPriceMap){
   //   return process.send({ data });

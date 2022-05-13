@@ -1,76 +1,87 @@
 "use strict";
-import cluster from "cluster";
-import os from "os";
 import Action from "./src/services/Action";
+import BinancePriceOracle from "./src/services/BinancePriceOracle";
 import checkForArbitrage from "./src/services/checkArbitrage";
 import ExchangeData from "./src/services/ExchangeData";
 import Trigger from "./src/services/Trigger";
 
-const logger = require('logzio-nodejs').createLogger({
-  token: 'wTMYrprFKilxYbGKaCGvUrOFOGYORNyy',
-  protocol: 'https',
-  host: 'listener.logz.io',
-  port: '8071',
-  type: 'elasticsearch'
+const logger = require("logzio-nodejs").createLogger({
+  token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",
+  protocol: "https",
+  host: "listener.logz.io",
+  port: "8071",
+  type: "elasticsearch",
 });
 
-export const orderBookPriceMap: orderBookPriceMap = {}
-
-const totalCPUs = os.cpus().length;
-
-const exchangesName: string[] = [
-  // "binance",
-  "bitfinex",
-  "ftx",
-  "bittrex",
-  // "kucoin",
-];
-
-// if (cluster.isPrimary) {
-//   console.log(`Number of CPUs is ${totalCPUs}`);
-//   console.log(`Master ${process.pid} is running`);
-
-//   for (let i = 0; i < totalCPUs; i++) {
-//     cluster.fork();
-//   }
-// } else {
-//   console.log(`Worker ${process.pid} started`);
-// }
-
-let cryptoComUrl: string = "wss://stream.crypto.com/v2/market";
-
 const LogAction = new Action(console.log);
-const LogzIOAction = new Action(logger.log);
 
-const orderBookData = new ExchangeData(exchangesName, [
-  {
-    exchangeName: "cryptocom",
-    url: cryptoComUrl,
-    dataFormat: {
-      symbol: "result.instrument_name",
-      orderbookData: "result.data",
+const ArbitrageTrigger = new Trigger(
+  [
+    {
+      priceOracleInstance: new BinancePriceOracle(),
+      exchangeName: " binance",
+      handlerMethod: "depthUpdate",
     },
-  },
-]);
-
-const orderbookTrigger = new Trigger(
-  orderBookData,
-  [LogAction, LogzIOAction],
+  ],
+  [LogAction],
   checkForArbitrage
 );
 
-orderbookTrigger.getOrderBookData();
+ArbitrageTrigger.listenStream();
 
-/* 
+//
 
-Trigger class always have three arguments  
-([] of data source/price oracle instances, array of actions, conditions)
+// // const exchangesName: string[] = [
+// //   // "binance",
+// //   "bitfinex",
+// //   "ftx",
+// //   "bittrex",
+// //   // "kucoin",
+// // ];
 
+// let cryptoComUrl: string = "wss://stream.crypto.com/v2/market";
+// let binanceUrl: string = "wss://stream.binance.com:9443/ws";
+// let ftxUrl: string = "wss://ftx.com/ws/";
 
-  const orderbookTrigger = new Trigger(
-    [orderBookData],
-    [LogAction, apiCallAction],
-    conditionFunction
-  );
+// const LogAction = new Action(console.log);
+// const LogzIOAction = new Action(logger.log);
 
-*/
+// const orderBookData = new ExchangeData([
+//   {
+//     exchangeName: "cryptocom",
+//     url: cryptoComUrl,
+//     dataFormat: {
+//       symbol: "result.instrument_name",
+//       orderbookData: "result.data",
+//     },
+//   },
+//   // {
+//   //   exchangeName: "binance",
+//   //   url: binanceUrl,
+//   // },
+//   // {
+//   //   exchangeName: "ftx",
+//   //   url: ftxUrl,
+//   // },
+// ]);
+
+// const orderbookTrigger = new Trigger(
+//   orderBookData,
+//   [LogAction],
+//   checkForArbitrage
+// );
+
+// orderbookTrigger.getOrderBookData();
+
+// /*
+
+// Trigger class always have three arguments
+// ([] of data source/price oracle instances, array of actions, conditions)
+
+//   const orderbookTrigger = new Trigger(
+//     [orderBookData],
+//     [LogAction, apiCallAction],
+//     conditionFunction
+//   );
+
+// */

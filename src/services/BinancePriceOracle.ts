@@ -1,4 +1,6 @@
+import axios from "axios";
 import PriceOracle from "./PriceOracle";
+// import fetch from "node-fetch";
 
 export default class BinancePriceOracle extends PriceOracle {
   binanceWsInstance: {};
@@ -13,6 +15,15 @@ export default class BinancePriceOracle extends PriceOracle {
   }
 
   getBinanceTradePairsList = () => {
+    let exchangeInfo = axios.get("https://api.binance.com/api/v3/exchangeInfo");
+    let symbols: any = [];
+    exchangeInfo.then((res) => {
+      res.data["symbols"].forEach((symbolObj: any) => {
+        symbols.push(symbolObj.symbol);
+      });
+      console.log({ symbols });
+    });
+
     // use this.binanceWsInstance to get trade pairs list
     // populate tradePairs array
     this.binanceTradePairsList = ["btcusdt", "ethbtc"];
@@ -33,10 +44,9 @@ export default class BinancePriceOracle extends PriceOracle {
   };
 
   getBinanceMessageStream = () => {
-    // define how to get the required Data
     this.getMessageStream(this.binanceWsInstance, {
-      askPrice: "a",
-      bidPrice: "b",
+      asks: "a",
+      bids: "b",
       symbol: "s",
       methodPath: "e",
     });

@@ -26,7 +26,14 @@ class PriceOracle {
   getPathValue(payload: { [x: string]: any }, path: string) {
     const jsonpath = path.split(".");
     for (let i = 0; i < jsonpath.length; i++) {
+      if (jsonpath[i] === "[]") {
+        payload = payload[0];
+        continue;
+      }
+
       payload = payload[jsonpath[i]];
+
+      if (!payload) break;
     }
     return payload;
   }
@@ -68,8 +75,8 @@ class PriceOracle {
         if (this.isMultiStream(message)) {
           this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
             cb({
-              askPrice: this.getPathValue(message, dataFormat.askPrice),
-              bidPrice: this.getPathValue(message, dataFormat.bidPrice),
+              asks: this.getPathValue(message, dataFormat.asks),
+              bids: this.getPathValue(message, dataFormat.bids),
               symbol: this.getPathValue(message, dataFormat.symbol),
             })
           );
@@ -81,8 +88,8 @@ class PriceOracle {
             .get(this.getPathValue(message, dataFormat.methodPath))
             .forEach((cb: (arg0: any) => void) => {
               cb({
-                askPrice: this.getPathValue(message, dataFormat.askPrice),
-                bidPrice: this.getPathValue(message, dataFormat.bidPrice),
+                asks: this.getPathValue(message, dataFormat.asks),
+                bids: this.getPathValue(message, dataFormat.bids),
                 symbol: this.getPathValue(message, dataFormat.symbol),
               });
             });

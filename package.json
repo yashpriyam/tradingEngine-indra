@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
     "ccxt.pro": "git+https://yashpriaym@github.com/kroitor/ccxt.pro.git",
     "logzio-nodejs": "^2.0.3",
     "typescript": "^4.6.4",

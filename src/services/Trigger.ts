@@ -1,5 +1,5 @@
+import logger from "../lib/logger";
 import Action from "./Action";
-import BinancePriceOracle from "./BinancePriceOracle";
 
 class Trigger {
   priceOracles: any[];
@@ -27,11 +27,101 @@ class Trigger {
 
       socketClient.setHandler(
         handlerMethod,
-        (params: { askPrice: number; bidPrice: number; symbol: string }) => {
-          console.log(params);
-          // orderBookPriceMap
+        (params: { asks: number[]; bids: number[]; symbol: string }) => {
+          let { asks, bids, symbol } = params;
+
+          // console.log({ params, exchangeName });
+
+          // asks and bids may be empty or undefined
+          if (
+            typeof asks === "undefined" ||
+            asks.length === 0 ||
+            typeof bids === "undefined" ||
+            bids.length === 0
+          )
+            return;
+
+          if (exchangeName === "cryptocom")
+            symbol = symbol.split("_").join("").toUpperCase();
+          else if (exchangeName === "binance") symbol = symbol.toUpperCase();
+          else if (exchangeName === "ftx")
+            symbol = symbol.split("/").join("").toUpperCase();
+
+          const askPrice = asks[0][0]; // lowest of asks
+          const askQuantity = asks[0][1];
+
+          const bidPrice = bids[bids.length - 1][0]; // lowest of bids
+          const bidQuantity = bids[0][1];
+
+          if (!this.orderBookPriceMap[symbol])
+            this.orderBookPriceMap[symbol] = {};
+
+          if (!this.orderBookPriceMap[symbol][exchangeName])
+            this.orderBookPriceMap[symbol][exchangeName] = {};
+
+          const previousAskPrice =
+            this.orderBookPriceMap[symbol][exchangeName].askPrice;
+
+          const previousBidPrice =
+            this.orderBookPriceMap[symbol][exchangeName].bidPrice;
+
+          if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
+            this.orderBookPriceMap[symbol][exchangeName] = {
+              askPrice,
+              bidPrice,
+            };
+
+            logger.log({ orderBookPriceMap: this.orderBookPriceMap });
+
+            console.log({
+              orderBookPriceMap: this.orderBookPriceMap,
+            });
+
+            this.orderbookDataArbitrage(
+              this.orderBookPriceMap
+              // symbol,
+              // exchangeName
+            );
+          }
         }
       );
+    }
+  }
+
+  orderbookDataArbitrage(
+    orderBookPriceMap: orderBookMap
+    // symbol: string,
+    // exchangeName: string
+  ) {
+    for (const symbol in orderBookPriceMap) {
+      for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
+        let askPrice: number =
+          orderBookPriceMap[symbol][askPriceExchangeKey].askPrice;
+
+        for (const bidPriceExchangeKey in orderBookPriceMap[symbol]) {
+          if (askPriceExchangeKey === bidPriceExchangeKey) continue;
+
+          let bidPrice: number =
+            orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
+
+          if (bidPrice >= askPrice) {
+            if (this.checkCondition(askPrice, bidPrice)) {
+              this.actions.forEach((singleAction) => {
+                singleAction.excuteAction({
+                  symbol,
+                  askPriceExchange: askPriceExchangeKey,
+                  bidPriceExchange: bidPriceExchangeKey,
+                  message: "Percentage differnce is greater than 1.0",
+                });
+              });
+            } else {
+              // console.log("Pecentage differnce is not greater than 1.0");
+            }
+          } else {
+            // console.log({ askPrice, bidPrice });
+          }
+        }
+      }
     }
   }
 
@@ -44,38 +134,19 @@ class Trigger {
   //     this.orderbookDataArbitrage(orderBookPriceMap);
   //   }
   // }
-
-  // orderbookDataArbitrage(orderBookPriceMap: orderBookPriceMap) {
-  //   for (const symbol in orderBookPriceMap) {
-  //     for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
-  //       let askPrice: number =
-  //         orderBookPriceMap[symbol][askPriceExchangeKey].askPrice;
-
-  //       for (const bidPriceExchangeKey in orderBookPriceMap[symbol]) {
-  //         if (askPriceExchangeKey === bidPriceExchangeKey) continue;
-  //         let bidPrice: number =
-  //           orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
-
-  //         if (bidPrice >= askPrice) {
-  //           if (this.checkCondition(askPrice, bidPrice)) {
-  //             this.actions.forEach((singleAction) => {
-  //               singleAction.excuteAction({
-  //                 symbol,
-  //                 askPriceExchange: askPriceExchangeKey,
-  //                 bidPriceExchange: bidPriceExchangeKey,
-  //                 message: "Percentage differnce is greater than 1.0",
-  //               });
-  //             });
-  //           } else {
-  //             // console.log("Pecentage differnce is not greater than 1.0");
-  //           }
-  //         } else {
-  //           // console.log({ askPrice, bidPrice });
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 export default Trigger;
+
+/* 
+{
+  "BTCUSD":{
+    "binance":{
+      askPrice: 100,
+      bp : 100
+    }, 
+    "ftx":{
+      ask
+    }
+  }
+} */

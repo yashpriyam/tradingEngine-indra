@@ -2,8 +2,9 @@
 import Action from "./src/services/Action";
 import BinancePriceOracle from "./src/services/BinancePriceOracle";
 import checkForArbitrage from "./src/services/checkArbitrage";
-import ExchangeData from "./src/services/ExchangeData";
 import Trigger from "./src/services/Trigger";
+
+export const orderBookPriceMap: orderBookMap = {};
 
 const logger = require("logzio-nodejs").createLogger({
   token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",

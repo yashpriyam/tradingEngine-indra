@@ -26,9 +26,9 @@ class Trigger {
       // socketClient.setHandler(handlerMethod, console.log);
 
       socketClient.setHandler(
-        "orderbook",
+        handlerMethod,
         (params: { askPrice: number; bidPrice: number; symbol: string }) => {
-          // console.log(params);
+          console.log(params);
           // orderBookPriceMap
         }
       );

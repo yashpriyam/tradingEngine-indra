@@ -18,10 +18,13 @@ class Trigger {
     this.orderBookPriceMap = {};
   }
 
-  listenStream() {
+  async listenStream() {
     for (let { priceOracleInstance, exchangeName, handlerMethod } of this
       .priceOracles) {
       const socketClient = priceOracleInstance;
+
+      // await socketClient.getBinanceTradePairsList();
+
       socketClient.subscribeOrderBookDataForAllTradePairs();
       // socketClient.setHandler(handlerMethod, console.log);
 
@@ -53,6 +56,9 @@ class Trigger {
           const bidPrice = bids[bids.length - 1][0]; // lowest of bids
           const bidQuantity = bids[0][1];
 
+          const smallQuantity =
+            askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
+
           if (!this.orderBookPriceMap[symbol])
             this.orderBookPriceMap[symbol] = {};
 
@@ -71,14 +77,15 @@ class Trigger {
               bidPrice,
             };
 
-            logger.log({ orderBookPriceMap: this.orderBookPriceMap });
+            // logger.log({ orderBookPriceMap: this.orderBookPriceMap });
 
             console.log({
               orderBookPriceMap: this.orderBookPriceMap,
             });
 
             this.orderbookDataArbitrage(
-              this.orderBookPriceMap
+              this.orderBookPriceMap,
+              smallQuantity
               // symbol,
               // exchangeName
             );
@@ -89,7 +96,8 @@ class Trigger {
   }
 
   orderbookDataArbitrage(
-    orderBookPriceMap: orderBookMap
+    orderBookPriceMap: orderBookMap,
+    smallQuantity: any
     // symbol: string,
     // exchangeName: string
   ) {
@@ -104,18 +112,30 @@ class Trigger {
           let bidPrice: number =
             orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
 
-          if (bidPrice >= askPrice) {
-            if (this.checkCondition(askPrice, bidPrice)) {
+          if (bidPrice * 100 >= askPrice) {
+            if (this.checkCondition(askPrice, bidPrice).valid) {
               this.actions.forEach((singleAction) => {
                 singleAction.excuteAction({
                   symbol,
                   askPriceExchange: askPriceExchangeKey,
                   bidPriceExchange: bidPriceExchangeKey,
                   message: "Percentage differnce is greater than 1.0",
+                  percentage_diffr: this.checkCondition(askPrice, bidPrice)
+                    .data,
+                  timestamp: Date.now(),
+                  smallQuantity,
                 });
               });
             } else {
-              // console.log("Pecentage differnce is not greater than 1.0");
+              logger.log({
+                message: "Pecentage differnce is less than 1.0",
+                symbol,
+                askPriceExchange: askPriceExchangeKey,
+                bidPriceExchange: bidPriceExchangeKey,
+                percentage_diffr: this.checkCondition(askPrice, bidPrice).data,
+                timestamp: Date.now(),
+                smallQuantity,
+              });
             }
           } else {
             // console.log({ askPrice, bidPrice });

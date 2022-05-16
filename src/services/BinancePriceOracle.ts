@@ -11,27 +11,30 @@ export default class BinancePriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.binance.com:9443/ws";
     this.binanceWsInstance = this._createSocket(this.wsUrl);
-    this.binanceTradePairsList = this.getBinanceTradePairsList();
+    this.binanceTradePairsList = ["btcusdt", "ethbtc"];
+    // this.binanceTradePairsList = this.getBinanceTradePairsList();
   }
 
-  getBinanceTradePairsList = () => {
-    let exchangeInfo = axios.get("https://api.binance.com/api/v3/exchangeInfo");
+  getBinanceTradePairsList = async () => {
+    let exchangeInfo = await axios.get(
+      "https://api.binance.com/api/v3/exchangeInfo"
+    );
     let symbols: any = [];
-    exchangeInfo.then((res) => {
-      res.data["symbols"].forEach((symbolObj: any) => {
-        symbols.push(symbolObj.symbol);
-      });
-      console.log({ symbols });
-    });
+    exchangeInfo.data["symbols"].forEach((symbolObj: any) =>
+      symbols.push(symbolObj.symbol.toLowerCase())
+    );
+    console.log({ symbols });
+    this.binanceTradePairsList = symbols.splice(1, 5);
 
     // use this.binanceWsInstance to get trade pairs list
     // populate tradePairs array
-    this.binanceTradePairsList = ["btcusdt", "ethbtc"];
+    // this.binanceTradePairsList = ["btcusdt", "ethbtc"];
     return this.binanceTradePairsList;
   };
 
   subscribeOrderBookDataForAllTradePairs = () => {
     let id = 0;
+    console.log(this.binanceTradePairsList);
     for (const tradePair of this.binanceTradePairsList) {
       const subscriberObject = {
         method: "SUBSCRIBE",

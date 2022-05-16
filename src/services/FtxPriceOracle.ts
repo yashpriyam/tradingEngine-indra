@@ -10,21 +10,19 @@ export default class FtxPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://ftx.com/ws/";
     this.FtxWsInstance = this._createSocket(this.wsUrl);
-    this.FtxTradePairsList = this.getFtxTradePairsList();
+    this.FtxTradePairsList = [];
+    // this.FtxTradePairsList = ["BTC/USDT", "ETH/BTC"];
   }
 
-  getFtxTradePairsList = () => {
-    let exchangeInfo = axios.get("https://ftx.com/api/markets");
+  getTradePairsList = async () => {
+    let exchangeInfo = await axios.get("https://ftx.com/api/markets");
     let symbols: any = [];
-    exchangeInfo.then((res) => {
-      res.data["result"].forEach((symbolObj: any) => {
-        symbols.push(symbolObj.name);
-      });
-      console.log({ symbols });
+
+    exchangeInfo.data.result.forEach((symbolObj: any) => {
+      symbols.push(symbolObj.name);
     });
 
-    this.FtxTradePairsList = ["BTC/USDT", "ETH/BTC"];
-    return this.FtxTradePairsList;
+    this.FtxTradePairsList = symbols.splice(0, 100);
   };
 
   subscribeOrderBookDataForAllTradePairs = () => {

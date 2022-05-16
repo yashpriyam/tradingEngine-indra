@@ -6,6 +6,7 @@ class Trigger {
   actions: Action[];
   checkCondition: Function;
   orderBookPriceMap: orderBookMap;
+  symbolMap: Map<string, string>;
 
   constructor(
     priceOracles: any[],
@@ -16,6 +17,7 @@ class Trigger {
     this.actions = actions;
     this.checkCondition = checkCondition;
     this.orderBookPriceMap = {};
+    this.symbolMap = new Map();
   }
 
   async listenStream() {
@@ -23,7 +25,7 @@ class Trigger {
       .priceOracles) {
       const socketClient = priceOracleInstance;
 
-      // await socketClient.getBinanceTradePairsList();
+      await socketClient.getTradePairsList();
 
       socketClient.subscribeOrderBookDataForAllTradePairs();
       // socketClient.setHandler(handlerMethod, console.log);
@@ -44,11 +46,28 @@ class Trigger {
           )
             return;
 
-          if (exchangeName === "cryptocom")
-            symbol = symbol.split("_").join("").toUpperCase();
-          else if (exchangeName === "binance") symbol = symbol.toUpperCase();
-          else if (exchangeName === "ftx")
-            symbol = symbol.split("/").join("").toUpperCase();
+          let symbolKey: any = "";
+
+          if (this.symbolMap.has(exchangeName + symbol)) {
+            symbolKey = this.symbolMap.get(exchangeName + symbol);
+          } else {
+            symbolKey = symbol.split("_").join("").toUpperCase();
+            if (exchangeName === "cryptocom")
+              this.symbolMap.set(exchangeName + symbol, symbolKey);
+            else if (exchangeName === "binance") {
+              symbolKey = symbol.toUpperCase();
+              this.symbolMap.set(exchangeName + symbol, symbolKey);
+            } else if (exchangeName === "ftx") {
+              symbolKey = symbol.split("/").join("").toUpperCase();
+              this.symbolMap.set(exchangeName + symbol, symbolKey);
+            }
+          }
+
+          // if (exchangeName === "cryptocom")
+          //   symbolKey = symbol.split("_").join("").toUpperCase();
+          // else if (exchangeName === "binance") symbolKey = symbol.toUpperCase();
+          // else if (exchangeName === "ftx")
+          //   symbolKey = symbol.split("/").join("").toUpperCase();
 
           const askPrice = asks[0][0]; // lowest of asks
           const askQuantity = asks[0][1];
@@ -59,20 +78,20 @@ class Trigger {
           const smallQuantity =
             askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
 
-          if (!this.orderBookPriceMap[symbol])
-            this.orderBookPriceMap[symbol] = {};
+          if (!this.orderBookPriceMap[symbolKey])
+            this.orderBookPriceMap[symbolKey] = {};
 
-          if (!this.orderBookPriceMap[symbol][exchangeName])
-            this.orderBookPriceMap[symbol][exchangeName] = {};
+          if (!this.orderBookPriceMap[symbolKey][exchangeName])
+            this.orderBookPriceMap[symbolKey][exchangeName] = {};
 
           const previousAskPrice =
-            this.orderBookPriceMap[symbol][exchangeName].askPrice;
+            this.orderBookPriceMap[symbolKey][exchangeName].askPrice;
 
           const previousBidPrice =
-            this.orderBookPriceMap[symbol][exchangeName].bidPrice;
+            this.orderBookPriceMap[symbolKey][exchangeName].bidPrice;
 
           if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
-            this.orderBookPriceMap[symbol][exchangeName] = {
+            this.orderBookPriceMap[symbolKey][exchangeName] = {
               askPrice,
               bidPrice,
             };
@@ -86,7 +105,7 @@ class Trigger {
             this.orderbookDataArbitrage(
               this.orderBookPriceMap,
               smallQuantity
-              // symbol,
+              // symbolKey,
               // exchangeName
             );
           }
@@ -98,9 +117,10 @@ class Trigger {
   orderbookDataArbitrage(
     orderBookPriceMap: orderBookMap,
     smallQuantity: any
-    // symbol: string,
+    // symbolKey: any,
     // exchangeName: string
   ) {
+    console.log({ length: Object.keys(orderBookPriceMap).length });
     for (const symbol in orderBookPriceMap) {
       for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
         let askPrice: number =

@@ -10,21 +10,19 @@ export default class CryptocomPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.crypto.com/v2/market";
     this.CryptocomWsInstance = this._createSocket(this.wsUrl);
-    this.CryptocomTradePairsList = this.getCryptocomTradePairsList();
+    this.CryptocomTradePairsList = [];
+    // this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
   }
 
-  getCryptocomTradePairsList = () => {
-    let exchangeInfo = axios.get("https://api.crypto.com/v1/symbols");
-    let symbols: any = [];
-    exchangeInfo.then((res) => {
-      res.data["data"].forEach((symbolObj: any) => {
-        symbols.push(symbolObj.symbol);
-      });
-      console.log({ symbols });
-    });
+  getTradePairsList = async () => {
+    let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
 
-    this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
-    return this.CryptocomTradePairsList;
+    let symbols: any = [];
+    exchangeInfo.data.data.forEach((symbolObj: any) =>
+      symbols.push(symbolObj.symbol)
+    );
+    // console.log({ symbols });
+    this.CryptocomTradePairsList = symbols.splice(1, 90);
   };
 
   subscribeOrderBookDataForAllTradePairs = () => {

@@ -11,11 +11,11 @@ export default class BinancePriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.binance.com:9443/ws";
     this.binanceWsInstance = this._createSocket(this.wsUrl);
-    this.binanceTradePairsList = ["btcusdt", "ethbtc"];
-    // this.binanceTradePairsList = this.getBinanceTradePairsList();
+    this.binanceTradePairsList = [];
+    // this.binanceTradePairsList = ["btcusdt", "ethbtc"];
   }
 
-  getBinanceTradePairsList = async () => {
+  getTradePairsList = async () => {
     let exchangeInfo = await axios.get(
       "https://api.binance.com/api/v3/exchangeInfo"
     );
@@ -23,13 +23,10 @@ export default class BinancePriceOracle extends PriceOracle {
     exchangeInfo.data["symbols"].forEach((symbolObj: any) =>
       symbols.push(symbolObj.symbol.toLowerCase())
     );
-    console.log({ symbols });
     this.binanceTradePairsList = symbols.splice(1, 5);
 
     // use this.binanceWsInstance to get trade pairs list
     // populate tradePairs array
-    // this.binanceTradePairsList = ["btcusdt", "ethbtc"];
-    return this.binanceTradePairsList;
   };
 
   subscribeOrderBookDataForAllTradePairs = () => {

@@ -20,12 +20,16 @@ class Trigger {
     this.symbolMap = new Map();
   }
 
+  createCommonSymbolMap() {}
+
   async listenStream() {
     for (let { priceOracleInstance, exchangeName, handlerMethod } of this
       .priceOracles) {
       const socketClient = priceOracleInstance;
 
-      await socketClient.getTradePairsList();
+      // await socketClient.getTradePairsList();
+
+      // this.createCommonSymbolMap(socketClient.);
 
       socketClient.subscribeOrderBookDataForAllTradePairs();
       // socketClient.setHandler(handlerMethod, console.log);
@@ -190,3 +194,22 @@ export default Trigger;
     }
   }
 } */
+
+/* 
+
+{
+
+  commonSymbol :{
+    exchange : symbol,
+    exchange : symbol,
+    exchange : symbol,
+  }, 
+  commonSymbol :{
+    exchange : symbol,
+    exchange : symbol,
+    exchange : symbol,
+  }, 
+
+}
+
+*/

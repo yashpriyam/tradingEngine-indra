@@ -6,11 +6,30 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import CryptocomPriceOracle from "./src/services/CryptocomPriceOracle";
 import FtxPriceOracle from "./src/services/FtxPriceOracle";
 import Trigger from "./src/services/Trigger";
+import { fork } from "child_process";
 
 export const orderBookPriceMap: orderBookMap = {};
 
 const LogAction = new Action(console.log);
 const logzLoggerAction = new Action(logger.log);
+
+const forkedProcess = fork(`${__dirname}/src/services/callApi.js`);
+
+forkedProcess.send({
+  exchangeName: "binance",
+});
+
+forkedProcess.on("message", async (message: any) => {
+  console.log({
+    binaceInstance: JSON.parse(message.binancePriceOracleInstance),
+    otherFunction: message.stringFunction,
+  });
+
+  let { stringFunction } = message;
+  let asyncFn = new Function("return " + stringFunction)();
+  let data = await asyncFn();
+  console.log({ data });
+});
 
 const ArbitrageTrigger = new Trigger(
   [
@@ -19,16 +38,16 @@ const ArbitrageTrigger = new Trigger(
       exchangeName: "binance",
       handlerMethod: "depthUpdate",
     },
-    {
-      priceOracleInstance: new CryptocomPriceOracle(),
-      exchangeName: "cryptocom",
-      handlerMethod: "book",
-    },
-    {
-      priceOracleInstance: new FtxPriceOracle(),
-      exchangeName: "ftx",
-      handlerMethod: "orderbook",
-    },
+    // {
+    //   priceOracleInstance: new CryptocomPriceOracle(),
+    //   exchangeName: "cryptocom",
+    //   handlerMethod: "book",
+    // },
+    // {
+    //   priceOracleInstance: new FtxPriceOracle(),
+    //   exchangeName: "ftx",
+    //   handlerMethod: "orderbook",
+    // },
   ],
 
   [LogAction, logzLoggerAction],

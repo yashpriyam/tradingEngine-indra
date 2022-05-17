@@ -27,6 +27,7 @@ export default class BinancePriceOracle extends PriceOracle {
 
     // use this.binanceWsInstance to get trade pairs list
     // populate tradePairs array
+    return this.binanceTradePairsList;
   };
 
   subscribeOrderBookDataForAllTradePairs = () => {

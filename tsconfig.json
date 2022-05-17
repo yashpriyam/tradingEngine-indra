@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2017",
     "module": "commonjs",
-    "lib": ["dom", "esnext.asynciterable", "es2016"],
+    "lib": ["dom", "esnext.asynciterable", "es2017"],
     "typeRoots": ["src/@types"],
     "outDir": "build",
     "esModuleInterop": true,

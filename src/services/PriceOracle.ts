@@ -1,21 +1,25 @@
 import * as WebSocket from "ws";
 
+/** base class to get exchange data */
 class PriceOracle {
   _handlers: Map<any, any>;
   isConnected: boolean;
   _ws: any;
-  dataFormat: any;
   constructor() {
     this._handlers = new Map();
     this.isConnected = false;
   }
 
+  /**
+   * used to subscribe a web socket stream
+   * @param subscriberObject object passed from the exchange price oracle class
+   * @param wsInstance web socket instance for exchange
+   * @returns void
+   */
   subscribeStream(subscriberObject: Object, wsInstance: any) {
-    // console.log({subscriberObject});
     if (this.isConnected) {
       wsInstance.send(JSON.stringify(subscriberObject));
       console.log("Listening to stream data for " + subscriberObject);
-      // ++this._id;
     } else {
       setTimeout(() => {
         this.subscribeStream(subscriberObject, wsInstance);
@@ -23,6 +27,12 @@ class PriceOracle {
     }
   }
 
+  /**
+   * it finds the value from the payload for a given path
+   * @param payload object data in which we need to find a property
+   * @param path path of the property in payload object data
+   * @returns path value from the payload
+   */
   getPathValue(payload: { [x: string]: any }, path: string) {
     const jsonpath = path.split(".");
     for (let i = 0; i < jsonpath.length; i++) {
@@ -38,6 +48,11 @@ class PriceOracle {
     return payload;
   }
 
+  /**
+   * create a websocket connection, handle websocket responses and log them
+   * @param wsUrl websocket connection url for a exchange
+   * @returns websocket instance
+   */
   _createSocket(wsUrl: string) {
     this._ws = new WebSocket.default(`${wsUrl}`);
 
@@ -50,7 +65,7 @@ class PriceOracle {
       console.log("receieved pong from server");
     });
     this._ws.on("ping", () => {
-      console.log("==========receieved ping from server");
+      console.log("receieved ping from server");
       this._ws.pong();
     });
 
@@ -67,6 +82,14 @@ class PriceOracle {
     return this._ws;
   }
 
+  /**
+   * handle the web socket messages and call the setHandler callback based on the method
+   * which is defined in the trigger class
+   * _handlers is a map for storing a callback for a method
+   * @param wsInstance web socket instance
+   * @param dataFormat an object having paths for different values
+   * @returns void
+   */
   getMessageStream(wsInstance: any, dataFormat: any) {
     wsInstance.onmessage = (msg: { data: string }) => {
       try {
@@ -102,10 +125,19 @@ class PriceOracle {
     };
   }
 
-  isMultiStream(message: { stream: any }) {
+  /**
+   * check, does message have multiple stream for a single message
+   * @param message web socket messaage
+   * @returns {boolean}
+   */
+  isMultiStream(message: { stream: any }): boolean {
     return message.stream && this._handlers.has(message.stream);
   }
 
+  /**
+   * Ping the web socker server every 5 seconds
+   * @returns void
+   */
   heartBeat() {
     setInterval(() => {
       if (this._ws.readyState === WebSocket.OPEN) {
@@ -115,6 +147,13 @@ class PriceOracle {
     }, 5000);
   }
 
+  /**
+   * store a callback for a given method,
+   * used in Trigger class to handle every message
+   * @param method a key to store a callback
+   * @param callback a function to execute for a message
+   * @returns void
+   */
   setHandler(method: string, callback: (params: any) => void) {
     if (!this._handlers.has(method)) {
       this._handlers.set(method, []);

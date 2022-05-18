@@ -10,21 +10,29 @@ export default class CryptocomPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.crypto.com/v2/market";
     this.CryptocomWsInstance = this._createSocket(this.wsUrl);
-    this.CryptocomTradePairsList = [];
-    // this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
+    // this.CryptocomTradePairsList = [];
+    this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
   }
 
+  /**
+   * get all the trade pairs for cryptocom exchange and store them in an array
+   * @returns void
+   */
   getTradePairsList = async () => {
     let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
 
-    let symbols: any = [];
+    let tradePairs: any = [];
     exchangeInfo.data.data.forEach((symbolObj: any) =>
-      symbols.push(symbolObj.symbol)
+      tradePairs.push(symbolObj.symbol)
     );
-    // console.log({ symbols });
-    this.CryptocomTradePairsList = symbols.splice(1, 90);
+    this.CryptocomTradePairsList = tradePairs.splice(1, 90);
   };
 
+  /**
+   * subscribe to orderbook stream of cryptcom exchange
+   * for every trade pair
+   * @returns void
+   */
   subscribeOrderBookDataForAllTradePairs = () => {
     let id = 0;
     for (const tradePair of this.CryptocomTradePairsList) {
@@ -40,6 +48,11 @@ export default class CryptocomPriceOracle extends PriceOracle {
     this.getCryptocomMessageStream();
   };
 
+  /**
+   * call the base class method "getMessageStream" for
+   * getting message for cryptocom exchange and pass a data format to it.
+   * @returns void
+   */
   getCryptocomMessageStream = () => {
     this.getMessageStream(this.CryptocomWsInstance, {
       asks: "result.data.[].asks",

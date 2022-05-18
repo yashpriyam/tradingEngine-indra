@@ -8,6 +8,11 @@ class Trigger {
   orderBookPriceMap: orderBookMap;
   symbolMap: Map<string, string>;
 
+  /**
+   * @param priceOracles Array of instances of ExchangePriceOracle class for different exchanges
+   * @param actions array of actions to be executed when checkCondition is true
+   * @param checkCondition a function which returns a data and valid boolean
+   */
   constructor(
     priceOracles: any[],
     actions: Action[],
@@ -20,8 +25,17 @@ class Trigger {
     this.symbolMap = new Map();
   }
 
+  /**
+   *
+   */
   createCommonSymbolMap() {}
 
+  /**
+   * Iterate over all price oracles instance and call the methods on every class instance
+   * It calls a setHandler method to create a map of method and callback to handle messages for
+   * different exchanges
+   * @returns void
+   */
   async listenStream() {
     for (let { priceOracleInstance, exchangeName, handlerMethod } of this
       .priceOracles) {
@@ -32,14 +46,16 @@ class Trigger {
       // this.createCommonSymbolMap(socketClient.);
 
       socketClient.subscribeOrderBookDataForAllTradePairs();
-      // socketClient.setHandler(handlerMethod, console.log);
 
+      /**
+       * this handler handles the message for orderbook data, it create a object map
+       * to store the ask and bid price for every exchange for every symbol.
+       * We pass that map to a function to find the arbitrage opportunities
+       */
       socketClient.setHandler(
         handlerMethod,
         (params: { asks: number[]; bids: number[]; symbol: string }) => {
           let { asks, bids, symbol } = params;
-
-          // console.log({ params, exchangeName });
 
           // asks and bids may be empty or undefined
           if (
@@ -52,6 +68,7 @@ class Trigger {
 
           let symbolKey: any = "";
 
+          // getting a common key to store data in orderbookPriceMap
           if (this.symbolMap.has(exchangeName + symbol)) {
             symbolKey = this.symbolMap.get(exchangeName + symbol);
           } else {
@@ -67,18 +84,14 @@ class Trigger {
             }
           }
 
-          // if (exchangeName === "cryptocom")
-          //   symbolKey = symbol.split("_").join("").toUpperCase();
-          // else if (exchangeName === "binance") symbolKey = symbol.toUpperCase();
-          // else if (exchangeName === "ftx")
-          //   symbolKey = symbol.split("/").join("").toUpperCase();
-
           const askPrice = asks[0][0]; // lowest of asks
           const askQuantity = asks[0][1];
 
-          const bidPrice = bids[bids.length - 1][0]; // lowest of bids
+          const bidPrice = bids[0][0];
+          // const bidPrice = bids[bids.length - 1][0]; // lowest of bids
           const bidQuantity = bids[0][1];
 
+          // get a key value pair whose quantity is lesser
           const smallQuantity =
             askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
 
@@ -118,13 +131,20 @@ class Trigger {
     }
   }
 
+  /**
+   * iterate over orderbookPriceMap for checking Arbitrage opportunites
+   * by comparing the askPrice and bidPrice for differnet exchange for a trade pair
+   * @param orderBookPriceMap
+   * @param smallQuantity a key-value pair of smallest quantity between asks or bids
+   * @returns void
+   */
   orderbookDataArbitrage(
     orderBookPriceMap: orderBookMap,
     smallQuantity: any
     // symbolKey: any,
     // exchangeName: string
   ) {
-    console.log({ length: Object.keys(orderBookPriceMap).length });
+    // console.log({ length: Object.keys(orderBookPriceMap).length });
     for (const symbol in orderBookPriceMap) {
       for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
         let askPrice: number =
@@ -136,7 +156,7 @@ class Trigger {
           let bidPrice: number =
             orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
 
-          if (bidPrice * 100 >= askPrice) {
+          if (bidPrice >= askPrice) {
             if (this.checkCondition(askPrice, bidPrice).valid) {
               this.actions.forEach((singleAction) => {
                 singleAction.excuteAction({
@@ -168,48 +188,6 @@ class Trigger {
       }
     }
   }
-
-  // async getOrderBookData() {
-  //   let orderBookGenerator = this.exchangeData.getOrderBookData();
-
-  //   for await (let orderBookPriceMap of orderBookGenerator) {
-  //     // console.log({ priceOrderMap: orderBookPriceMap });
-
-  //     this.orderbookDataArbitrage(orderBookPriceMap);
-  //   }
-  // }
 }
 
 export default Trigger;
-
-/* 
-{
-  "BTCUSD":{
-    "binance":{
-      askPrice: 100,
-      bp : 100
-    }, 
-    "ftx":{
-      ask
-    }
-  }
-} */
-
-/* 
-
-{
-
-  commonSymbol :{
-    exchange : symbol,
-    exchange : symbol,
-    exchange : symbol,
-  }, 
-  commonSymbol :{
-    exchange : symbol,
-    exchange : symbol,
-    exchange : symbol,
-  }, 
-
-}
-
-*/

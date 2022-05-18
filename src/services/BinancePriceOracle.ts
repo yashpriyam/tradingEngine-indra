@@ -11,28 +11,33 @@ export default class BinancePriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.binance.com:9443/ws";
     this.binanceWsInstance = this._createSocket(this.wsUrl);
-    this.binanceTradePairsList = [];
-    // this.binanceTradePairsList = ["btcusdt", "ethbtc"];
+    // this.binanceTradePairsList = [];
+    this.binanceTradePairsList = ["btcusdt", "ethbtc"];
   }
 
+  /**
+   * get all the trade pairs for binance exchange and store them in an array
+   * @returns void
+   */
   getTradePairsList = async () => {
     let exchangeInfo = await axios.get(
       "https://api.binance.com/api/v3/exchangeInfo"
     );
-    let symbols: any = [];
+    let tradePairs: any = [];
     exchangeInfo.data["symbols"].forEach((symbolObj: any) =>
-      symbols.push(symbolObj.symbol.toLowerCase())
+      tradePairs.push(symbolObj.symbol.toLowerCase())
     );
-    this.binanceTradePairsList = symbols.splice(1, 5);
 
-    // use this.binanceWsInstance to get trade pairs list
-    // populate tradePairs array
-    return this.binanceTradePairsList;
+    this.binanceTradePairsList = tradePairs.splice(1, 5);
   };
 
+  /**
+   * subscribe to orderbook stream of binance exchange
+   * for every trade pair
+   * @returns void
+   */
   subscribeOrderBookDataForAllTradePairs = () => {
     let id = 0;
-    console.log(this.binanceTradePairsList);
     for (const tradePair of this.binanceTradePairsList) {
       const subscriberObject = {
         method: "SUBSCRIBE",
@@ -44,6 +49,11 @@ export default class BinancePriceOracle extends PriceOracle {
     this.getBinanceMessageStream();
   };
 
+  /**
+   * call the base class method "getMessageStream" for
+   * getting message for binance exchange and pass a data format to it.
+   * @returns void
+   */
   getBinanceMessageStream = () => {
     this.getMessageStream(this.binanceWsInstance, {
       asks: "a",

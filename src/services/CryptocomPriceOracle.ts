@@ -5,6 +5,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
   CryptocomWsInstance: {};
   wsUrl: string;
   CryptocomTradePairsList: string[];
+  exchangeName: "cryptocom"
 
   constructor() {
     super();
@@ -12,6 +13,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
     this.CryptocomWsInstance = this._createSocket(this.wsUrl);
     // this.CryptocomTradePairsList = [];
     this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
+    this.exchangeName = "cryptocom";
   }
 
   /**

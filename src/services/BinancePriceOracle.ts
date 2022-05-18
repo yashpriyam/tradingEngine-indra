@@ -1,4 +1,5 @@
 import axios from "axios";
+import { zb } from "ccxt.pro";
 import PriceOracle from "./PriceOracle";
 // import fetch from "node-fetch";
 
@@ -6,6 +7,7 @@ export default class BinancePriceOracle extends PriceOracle {
   binanceWsInstance: {};
   wsUrl: string;
   binanceTradePairsList: string[];
+  exchangeName: 'binance'
 
   constructor() {
     super();
@@ -13,6 +15,7 @@ export default class BinancePriceOracle extends PriceOracle {
     this.binanceWsInstance = this._createSocket(this.wsUrl);
     // this.binanceTradePairsList = [];
     this.binanceTradePairsList = ["btcusdt", "ethbtc"];
+    this.exchangeName = 'binance'
   }
 
   /**
@@ -28,7 +31,18 @@ export default class BinancePriceOracle extends PriceOracle {
       tradePairs.push(symbolObj.symbol.toLowerCase())
     );
 
+    // const tradePairListOfExchangeInCommonFormat = {} // {ETHBTC: eth_btc, BTCUSD: btc_usd}
+    // tradePairs.forEach((tradePair: string, idx: number) => {
+    //   // [A-Z, a-z, 0-9]
+    //   // const commonFormatOfTradePair = tradePair.allTheFilters
+    //   tradePairListOfExchangeInCommonFormat[commonFormatOfTradePair] = tradePair
+    // })
+
     this.binanceTradePairsList = tradePairs.splice(1, 5);
+    // return {
+    //   binanceTradePairsList: this.binanceTradePairsList,
+    //   tradePairListOfExchangeInCommonFormat,
+    // }
   };
 
   /**

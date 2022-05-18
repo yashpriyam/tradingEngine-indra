@@ -5,6 +5,7 @@ export default class FtxPriceOracle extends PriceOracle {
   FtxWsInstance: {};
   wsUrl: string;
   FtxTradePairsList: string[];
+  exchangeName: "ftx";
 
   constructor() {
     super();
@@ -12,6 +13,7 @@ export default class FtxPriceOracle extends PriceOracle {
     this.FtxWsInstance = this._createSocket(this.wsUrl);
     // this.FtxTradePairsList = [];
     this.FtxTradePairsList = ["BTC/USDT", "ETH/BTC"];
+    this.exchangeName = "ftx";
   }
 
   /**

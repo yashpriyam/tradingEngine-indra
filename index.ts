@@ -33,7 +33,82 @@ const logzLoggerAction = new Action(logger.log);
  * create an instance for arbitrage trigger to trigger the orderbook data
  * for different exchange
  */
-const ArbitrageTrigger = new Trigger(
+
+class ArbitrageTrigger extends Trigger {
+  priceOracleInstances: any[]
+  orderBookPriceMap: {}
+  allTradePairsExchangeMap: {[key: string]: {}} // all trade pairs from all exchanges, in exchange format
+  /*
+  {
+    exchangeName: {all trade pairs in exchange format},
+    exchangeName: {all trade pairs},
+    exchangeName: {all trade pairs}
+  }
+  */
+  tradePairsInCommonFormat: {[key: string]: {}}
+/*
+{
+  commonSymbol: {
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+  },
+  commonSymbol: {
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+    exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
+  },
+}
+
+orderBookPriceMap======
+{
+  commonSymbol: {
+    exchangeName: {askPrice, bidPrice},
+    exchangeName: {askPrice, bidPrice},
+    exchangeName: {askPrice, bidPrice},
+  },
+  commonSymbol: {
+    exchangeName: {askPrice, bidPrice},
+    exchangeName: {askPrice, bidPrice},
+    exchangeName: {askPrice, bidPrice},
+  },
+}
+
+symbolMap
+{
+  'SYMBOL_IN_EXCHANGE_FORMAT': 'commonSymbol',
+  eth_btc: ETHBTC
+  eth/btc: ETHBTC
+  ETH_BTC: ETHBTC
+}
+
+orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
+orderBookPriceMap[symbolMap[data]][exchangeName].bidPrice
+
+binance: tradePairListOfExchangeInCommonFormat = {ETHBTC: eth_btc, BTCUSD: btc_usd}
+ftx: tradePairListOfExchangeInCommonFormat = {ETHBTC: eth/btc, BTCUSD: btc/usd}
+crypto: tradePairListOfExchangeInCommonFormat = {ETHBTC: ETH/BTC, BTCUSD: BTC/USD}
+store this all in allTradePairsExchangeMap
+*/
+
+  constructor(){
+    super()
+    this.priceOracleInstances = [new BinancePriceOracle(), new CryptocomPriceOracle(), new FtxPriceOracle()]
+    this.orderBookPriceMap = {}
+    this.allTradePairsExchangeMap = {}
+    this.tradePairsInCommonFormat = {}
+
+    // getting all trade pairs from each exchange: allTradePairsExchangeMap
+    for (const priceOracleInstance of this.priceOracleInstances) {
+      this.allTradePairsExchangeMap = {...this.allTradePairsExchangeMap,
+        [priceOracleInstance.exchangeName]: [...priceOracleInstance.getTradePairsList().binanceTradePairsList]
+      }
+    }
+    // remove all the logic for creating symbol maps from trigger class
+    // and put'em all here, so that all the DS are created before calling the listenstream method
+  }
+}
+const ArbitrageTrigger1 = new Trigger(
   [
     {
       priceOracleInstance: new BinancePriceOracle(),
@@ -56,4 +131,4 @@ const ArbitrageTrigger = new Trigger(
   checkForArbitrage
 );
 
-ArbitrageTrigger.listenStream();
+new ArbitrageTrigger().listenStream();

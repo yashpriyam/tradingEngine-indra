@@ -41,9 +41,41 @@ class ArbitrageTrigger extends Trigger {
   /*
   {
     exchangeName: {all trade pairs in exchange format},
-    exchangeName: {all trade pairs},
+    exchangeName: {eth_btc: ETHBTC, eth_btc: ETHBTC},
     exchangeName: {all trade pairs}
   }
+
+  {...Object.values(allTradePairsExchangeMap)} = > { eth_btc: ETHBTC, eth_btc: ETHBTC, eth_btc: ETHBTC } = commonsymbolMap
+
+  Object.values(commonsymbolMap) = {...[ETHBTC, ETHBTC, ETHBTC]}: starting of OrderBookPriceMap
+
+  { ETHBTC: ETHBTC, ETHBTC: ETHBTC, ETHBTC: ETHBTC }
+
+  
+
+
+  -> commonSymbolMap:
+    {
+      'SYMBOL_IN_EXCHANGE_FORMAT': 'commonSymbol',
+      eth_btc: ETHBTC
+      eth/btc: ETHBTC
+      ETH_BTC: ETHBTC
+    }:
+
+  -> orderBookPriceMap======
+    {
+      commonSymbol: {
+        exchangeName: {askPrice, bidPrice},
+        exchangeName: {askPrice, bidPrice},
+        exchangeName: {askPrice, bidPrice},
+      },
+      commonSymbol: {
+        exchangeName: {askPrice, bidPrice},
+        exchangeName: {askPrice, bidPrice},
+        exchangeName: {askPrice, bidPrice},
+      },
+    }
+
   */
   tradePairsInCommonFormat: { [key: string]: {} };
 
@@ -55,34 +87,11 @@ class ArbitrageTrigger extends Trigger {
         exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
         exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
       },
-      commonSymbol: {
-        exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
-        exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
-        exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
-      },
     }
 
-    orderBookPriceMap======
-    {
-      commonSymbol: {
-        exchangeName: {askPrice, bidPrice},
-        exchangeName: {askPrice, bidPrice},
-        exchangeName: {askPrice, bidPrice},
-      },
-      commonSymbol: {
-        exchangeName: {askPrice, bidPrice},
-        exchangeName: {askPrice, bidPrice},
-        exchangeName: {askPrice, bidPrice},
-      },
-    }
+    
 
-    commonSymbolMap
-    {
-      'SYMBOL_IN_EXCHANGE_FORMAT': 'commonSymbol',
-      eth_btc: ETHBTC
-      eth/btc: ETHBTC
-      ETH_BTC: ETHBTC
-    }
+    
 
     orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
     orderBookPriceMap[symbolMap[data]][exchangeName].bidPrice

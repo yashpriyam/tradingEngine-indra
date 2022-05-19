@@ -25,38 +25,20 @@ export default class BinancePriceOracle extends PriceOracle {
    * @returns void
    */
   getTradePairsList = async () => {
-    /* 
-      we can use this api to get symbols and volume both
-      https://api.binance.com/api/v3/ticker/24hr 
-    */
-    let exchangeInfo = await axios.get(
-      "https://api.binance.com/api/v3/exchangeInfo"
-    );
     let tradePairs: any = [];
     const commonTradePairMap = {};
 
-    const startTime = Math.round(new Date().getTime() - 86400000);
-    const endTime = Math.round(new Date().getTime());
+    let tradePairsList = await axios.get(
+      "https://api.binance.com/api/v3/ticker/24hr"
+    );
 
-    exchangeInfo.data["symbols"].forEach((symbolObj: any) => {
-      axios
-        .get(
-          `https://api.binance.com/api/v3/klines?symbol=${symbolObj.symbol}&interval=1d&startTime=${startTime}&endTime=${endTime}`
-        )
-        .then((getTradeVolume) => {
-          const tradeVolume =
-            getTradeVolume.data[0] && getTradeVolume.data[0][5];
-
-          // console.log({ symbol: symbolObj.symbol, tradeVolumne });
-
-          if (tradeVolume > 50000) {
-            tradePairs.push(symbolObj.symbol.toLowerCase()); // to subscribe to trade pair's ws stream
-
-            commonTradePairMap[symbolObj.symbol.toLowerCase()] =
-              symbolObj.symbol.replace(/[^a-z0-9]/gi, "").toUpperCase();
-          }
-        })
-        .catch((error) => console.error({ error }));
+    tradePairsList.data.forEach((symbolObj: any) => {
+      if (symbolObj.volume > 5000000) {
+        tradePairs.push(symbolObj.symbol.toLowerCase());
+        commonTradePairMap[symbolObj.symbol.toLowerCase()] = symbolObj.symbol
+          .replace(/[^a-z0-9]/gi, "")
+          .toUpperCase();
+      }
     });
 
     // const tradePairListOfExchangeInCommonFormat = {} // {ETHBTC: eth_btc, BTCUSD: btc_usd}
@@ -67,6 +49,7 @@ export default class BinancePriceOracle extends PriceOracle {
     // })
 
     this.binanceTradePairsList = tradePairs.splice(1, 5);
+
     return {
       commonTradePairMap,
     };

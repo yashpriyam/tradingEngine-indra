@@ -37,7 +37,7 @@ export default class FtxPriceOracle extends PriceOracle {
       }
     });
 
-    console.log({ tradePairs });
+    // console.log({ tradePairs, commonTradePairMap });
 
     this.FtxTradePairsList = tradePairs.splice(0, 100);
     return { commonTradePairMap };

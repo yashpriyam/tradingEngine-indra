@@ -18,7 +18,6 @@ class Trigger {
     for (let priceOracleInstance of priceOraclesInstances) {
       const socketClient = priceOracleInstance;
       const exchangeName = socketClient.exchangeName;
-      console.log({ exchangeName });
 
       socketClient.subscribeOrderBookDataForAllTradePairs();
 

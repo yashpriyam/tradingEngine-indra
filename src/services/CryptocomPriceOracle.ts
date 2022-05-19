@@ -27,35 +27,27 @@ export default class CryptocomPriceOracle extends PriceOracle {
       we can use this api to get symbols and volume both
      https://api.crypto.com/v2/public/get-ticker
     */
-    let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
+    // let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
 
     let tradePairs: any = [];
     const commonTradePairMap = {};
 
-    exchangeInfo.data.data.forEach((symbolObj: any) => {
-      axios
-        .get(
-          `https://api.crypto.com/v2/public/get-ticker?instrument_name=${symbolObj.symbol}`
-        )
-        .then((getTradeVolume) => {
-          const tradeVolumne =
-            getTradeVolume.data &&
-            getTradeVolume.data.result &&
-            getTradeVolume.data.result.data["v"];
+    let tradePairsList = await axios.get(
+      "https://api.crypto.com/v2/public/get-ticker"
+    );
 
-          // console.log({ symbol: symbolObj.symbol, tradeVolumne });
+    tradePairsList.data &&
+      tradePairsList.data.result &&
+      tradePairsList.data.result.data.forEach((symbolObj: any) => {
+        if (symbolObj.v > 5000000) {
+          tradePairs.push(symbolObj.i);
+          commonTradePairMap[symbolObj.i] = symbolObj.i
+            .replace(/[^a-z0-9]/gi, "")
+            .toUpperCase();
+        }
+      });
 
-          if (tradeVolumne && tradeVolumne > 50000) {
-            tradePairs.push(symbolObj.symbol);
-            commonTradePairMap[symbolObj.symbol] = symbolObj.symbol
-              .replace(/[^a-z0-9]/gi, "")
-              .toUpperCase();
-          }
-        })
-        .catch((error) => console.error({ error }));
-    });
-
-    console.log({ tradePairs });
+    // console.log({ tradePairs, commonTradePairMap });
 
     this.CryptocomTradePairsList = tradePairs.splice(1, 90);
 

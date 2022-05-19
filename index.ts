@@ -88,10 +88,11 @@ class ArbitrageTrigger extends Trigger {
         exchangeName: 'SYMBOL_IN_EXCHANGE_FORMAT',
       },
     }
-
     
 
-    
+
+
+
 
     orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
     orderBookPriceMap[symbolMap[data]][exchangeName].bidPrice
@@ -139,6 +140,8 @@ class ArbitrageTrigger extends Trigger {
         [priceOracleInstance.exchangeName]: { ...commonTradePairMap },
       };
     }
+
+    console.log({ value: this.allTradePairsExchangeMap });
 
     this.createCommonSymbolMap();
     this.createOrderBookPriceMap();

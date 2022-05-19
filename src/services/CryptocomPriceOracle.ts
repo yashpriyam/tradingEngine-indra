@@ -23,14 +23,43 @@ export default class CryptocomPriceOracle extends PriceOracle {
    * @returns void
    */
   getTradePairsList = async () => {
+    /* 
+      we can use this api to get symbols and volume both
+     https://api.crypto.com/v2/public/get-ticker
+    */
     let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
 
     let tradePairs: any = [];
-    exchangeInfo.data.data.forEach((symbolObj: any) =>
-      tradePairs.push(symbolObj.symbol)
-    );
+    const commonTradePairMap = {};
+
+    exchangeInfo.data.data.forEach((symbolObj: any) => {
+      axios
+        .get(
+          `https://api.crypto.com/v2/public/get-ticker?instrument_name=${symbolObj.symbol}`
+        )
+        .then((getTradeVolume) => {
+          const tradeVolumne =
+            getTradeVolume.data &&
+            getTradeVolume.data.result &&
+            getTradeVolume.data.result.data["v"];
+
+          // console.log({ symbol: symbolObj.symbol, tradeVolumne });
+
+          if (tradeVolumne && tradeVolumne > 50000) {
+            tradePairs.push(symbolObj.symbol);
+            commonTradePairMap[symbolObj.symbol] = symbolObj.symbol
+              .replace(/[^a-z0-9]/gi, "")
+              .toUpperCase();
+          }
+        })
+        .catch((error) => console.error({ error }));
+    });
+
+    console.log({ tradePairs });
+
     this.CryptocomTradePairsList = tradePairs.splice(1, 90);
-    return this.CryptocomTradePairsList;
+
+    return { commonTradePairMap };
   };
 
   /**

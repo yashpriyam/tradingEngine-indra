@@ -95,7 +95,6 @@ class ArbitrageTrigger extends Trigger {
     Getting data from exchanges:
     getTradePairs -> allTradePairsExchangeMap -> commonSymbolsMap -> orderBookPriceMap
 
-
     Receiving ws stream updates:
 
     exchangeSpecificSymbolFormat ->
@@ -123,7 +122,7 @@ class ArbitrageTrigger extends Trigger {
   // getting all trade pairs from each exchange: allTradePairsExchangeMap
   getAllTradePairs = async () => {
     for (const priceOracleInstance of this.priceOracleInstances) {
-      const { tradePairsList, commonTradePairMap } =
+      const { commonTradePairMap } =
         await priceOracleInstance.getTradePairsList();
 
       this.allTradePairsExchangeMap = {
@@ -140,7 +139,6 @@ class ArbitrageTrigger extends Trigger {
     // for (let exchangeKey in this.allTradePairsExchangeMap) {
     //   // let tradePairsForExchange: string[] =
     //   //   this.allTradePairsExchangeMap[exchangeKey];
-
     //   // tradePairsForExchange.forEach((tradePair) => {
     //   //   this.commonSymbolMap[tradePair] = tradePair
     //   //     .replace(/[^a-z0-9]/gi, "")
@@ -148,8 +146,7 @@ class ArbitrageTrigger extends Trigger {
     //   // });
     // }
     // this.commonSymbolMap = { ...Object.values(this.allTradePairsExchangeMap) };
-    console.log({ value: this.allTradePairsExchangeMap });
-
+    // console.log({ value: this.allTradePairsExchangeMap });
     // console.log({ commonSymbolMap: this.commonSymbolMap });
   };
 
@@ -160,7 +157,7 @@ class ArbitrageTrigger extends Trigger {
       this.priceOracleInstances,
       this.orderBookPriceMap,
       this.commonSymbolMap,
-      [logzLoggerAction],
+      [],
       checkForArbitrage
     );
   };

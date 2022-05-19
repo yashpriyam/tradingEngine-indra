@@ -25,13 +25,22 @@ export default class FtxPriceOracle extends PriceOracle {
   getTradePairsList = async () => {
     let exchangeInfo = await axios.get("https://ftx.com/api/markets");
     let tradePairs: any = [];
+    const commonTradePairMap = {};
 
     exchangeInfo.data.result.forEach((symbolObj: any) => {
-      tradePairs.push(symbolObj.name);
+      if (symbolObj.volumeUsd24h > 5000000) {
+        tradePairs.push(symbolObj.name);
+
+        commonTradePairMap[symbolObj.name] = symbolObj.name
+          .replace(/[^a-z0-9]/gi, "")
+          .toUpperCase();
+      }
     });
 
+    console.log({ tradePairs });
+
     this.FtxTradePairsList = tradePairs.splice(0, 100);
-    return this.FtxTradePairsList;
+    return { commonTradePairMap };
   };
 
   /**

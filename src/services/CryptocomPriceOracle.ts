@@ -5,7 +5,8 @@ export default class CryptocomPriceOracle extends PriceOracle {
   CryptocomWsInstance: {};
   wsUrl: string;
   CryptocomTradePairsList: string[];
-  exchangeName: "cryptocom"
+  exchangeName: "cryptocom";
+  orderbookhandlerMethod: "book";
 
   constructor() {
     super();
@@ -14,6 +15,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
     // this.CryptocomTradePairsList = [];
     this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
     this.exchangeName = "cryptocom";
+    this.orderbookhandlerMethod = "book";
   }
 
   /**
@@ -28,6 +30,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
       tradePairs.push(symbolObj.symbol)
     );
     this.CryptocomTradePairsList = tradePairs.splice(1, 90);
+    return this.CryptocomTradePairsList;
   };
 
   /**

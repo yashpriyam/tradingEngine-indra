@@ -6,6 +6,7 @@ export default class FtxPriceOracle extends PriceOracle {
   wsUrl: string;
   FtxTradePairsList: string[];
   exchangeName: "ftx";
+  orderbookhandlerMethod: "orderbook";
 
   constructor() {
     super();
@@ -14,6 +15,7 @@ export default class FtxPriceOracle extends PriceOracle {
     // this.FtxTradePairsList = [];
     this.FtxTradePairsList = ["BTC/USDT", "ETH/BTC"];
     this.exchangeName = "ftx";
+    this.orderbookhandlerMethod = "orderbook";
   }
 
   /**
@@ -29,6 +31,7 @@ export default class FtxPriceOracle extends PriceOracle {
     });
 
     this.FtxTradePairsList = tradePairs.splice(0, 100);
+    return this.FtxTradePairsList;
   };
 
   /**

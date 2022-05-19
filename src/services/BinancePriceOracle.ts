@@ -7,7 +7,8 @@ export default class BinancePriceOracle extends PriceOracle {
   binanceWsInstance: {};
   wsUrl: string;
   binanceTradePairsList: string[];
-  exchangeName: 'binance'
+  exchangeName: "binance";
+  orderbookhandlerMethod: "depthUpdate";
 
   constructor() {
     super();
@@ -15,7 +16,8 @@ export default class BinancePriceOracle extends PriceOracle {
     this.binanceWsInstance = this._createSocket(this.wsUrl);
     // this.binanceTradePairsList = [];
     this.binanceTradePairsList = ["btcusdt", "ethbtc"];
-    this.exchangeName = 'binance'
+    this.exchangeName = "binance";
+    this.orderbookhandlerMethod = "depthUpdate";
   }
 
   /**
@@ -27,9 +29,15 @@ export default class BinancePriceOracle extends PriceOracle {
       "https://api.binance.com/api/v3/exchangeInfo"
     );
     let tradePairs: any = [];
-    exchangeInfo.data["symbols"].forEach((symbolObj: any) =>
-      tradePairs.push(symbolObj.symbol.toLowerCase())
-    );
+    const commonTradePairMap = {};
+
+    // to subscribe to trade pair's ws stream
+    exchangeInfo.data["symbols"].forEach((symbolObj: any) => {
+      tradePairs.push(symbolObj.symbol.toLowerCase());
+      commonTradePairMap[symbolObj.symbol.toLowerCase()] = symbolObj.symbol
+        .replace(/[^a-z0-9]/gi, "")
+        .toUpperCase();
+    });
 
     // const tradePairListOfExchangeInCommonFormat = {} // {ETHBTC: eth_btc, BTCUSD: btc_usd}
     // tradePairs.forEach((tradePair: string, idx: number) => {
@@ -39,10 +47,10 @@ export default class BinancePriceOracle extends PriceOracle {
     // })
 
     this.binanceTradePairsList = tradePairs.splice(1, 5);
-    // return {
-    //   binanceTradePairsList: this.binanceTradePairsList,
-    //   tradePairListOfExchangeInCommonFormat,
-    // }
+    return {
+      tradePairsList: this.binanceTradePairsList,
+      commonTradePairMap,
+    };
   };
 
   /**

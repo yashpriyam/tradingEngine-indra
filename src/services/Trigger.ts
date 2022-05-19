@@ -2,48 +2,23 @@ import logger from "../lib/logger";
 import Action from "./Action";
 
 class Trigger {
-  priceOracles: any[];
-  actions: Action[];
-  checkCondition: Function;
-  orderBookPriceMap: orderBookMap;
-  symbolMap: Map<string, string>;
-
-  /**
-   * @param priceOracles Array of instances of ExchangePriceOracle class for different exchanges
-   * @param actions array of actions to be executed when checkCondition is true
-   * @param checkCondition a function which returns a data and valid boolean
-   */
-  constructor(
-    priceOracles: any[],
-    actions: Action[],
-    checkCondition: Function
-  ) {
-    this.priceOracles = priceOracles;
-    this.actions = actions;
-    this.checkCondition = checkCondition;
-    this.orderBookPriceMap = {};
-    this.symbolMap = new Map();
-  }
-
-  /**
-   *
-   */
-  createCommonSymbolMap() {}
-
   /**
    * Iterate over all price oracles instance and call the methods on every class instance
    * It calls a setHandler method to create a map of method and callback to handle messages for
    * different exchanges
    * @returns void
    */
-  async listenStream() {
-    for (let { priceOracleInstance, exchangeName, handlerMethod } of this
-      .priceOracles) {
+  async listenStream(
+    priceOraclesInstances: any[],
+    orderBookPriceMap: { [key: string]: {} },
+    commonSymbolMap: Map<string, string>,
+    actions: Action[],
+    checkCondition: Function
+  ) {
+    for (let priceOracleInstance of priceOraclesInstances) {
       const socketClient = priceOracleInstance;
-
-      // await socketClient.getTradePairsList();
-
-      // this.createCommonSymbolMap(socketClient.);
+      const exchangeName = socketClient.exchangeName;
+      console.log({ exchangeName });
 
       socketClient.subscribeOrderBookDataForAllTradePairs();
 
@@ -53,7 +28,7 @@ class Trigger {
        * We pass that map to a function to find the arbitrage opportunities
        */
       socketClient.setHandler(
-        handlerMethod,
+        socketClient.orderbookhandlerMethod,
         (params: { asks: number[]; bids: number[]; symbol: string }) => {
           let { asks, bids, symbol } = params;
 
@@ -69,20 +44,6 @@ class Trigger {
           let symbolKey: any = "";
 
           // getting a common key to store data in orderbookPriceMap
-          if (this.symbolMap.has(exchangeName + symbol)) {
-            symbolKey = this.symbolMap.get(exchangeName + symbol);
-          } else {
-            symbolKey = symbol.split("_").join("").toUpperCase();
-            if (exchangeName === "cryptocom")
-              this.symbolMap.set(exchangeName + symbol, symbolKey);
-            else if (exchangeName === "binance") {
-              symbolKey = symbol.toUpperCase();
-              this.symbolMap.set(exchangeName + symbol, symbolKey);
-            } else if (exchangeName === "ftx") {
-              symbolKey = symbol.split("/").join("").toUpperCase();
-              this.symbolMap.set(exchangeName + symbol, symbolKey);
-            }
-          }
 
           const askPrice = asks[0][0]; // lowest of asks
           const askQuantity = asks[0][1];
@@ -95,20 +56,19 @@ class Trigger {
           const smallQuantity =
             askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
 
-          if (!this.orderBookPriceMap[symbolKey])
-            this.orderBookPriceMap[symbolKey] = {};
+          if (!orderBookPriceMap[symbolKey]) orderBookPriceMap[symbolKey] = {};
 
-          if (!this.orderBookPriceMap[symbolKey][exchangeName])
-            this.orderBookPriceMap[symbolKey][exchangeName] = {};
+          if (!orderBookPriceMap[symbolKey][exchangeName])
+            orderBookPriceMap[symbolKey][exchangeName] = {};
 
           const previousAskPrice =
-            this.orderBookPriceMap[symbolKey][exchangeName].askPrice;
+            orderBookPriceMap[symbolKey][exchangeName].askPrice;
 
           const previousBidPrice =
-            this.orderBookPriceMap[symbolKey][exchangeName].bidPrice;
+            orderBookPriceMap[symbolKey][exchangeName].bidPrice;
 
           if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
-            this.orderBookPriceMap[symbolKey][exchangeName] = {
+            orderBookPriceMap[symbolKey][exchangeName] = {
               askPrice,
               bidPrice,
             };
@@ -116,12 +76,14 @@ class Trigger {
             // logger.log({ orderBookPriceMap: this.orderBookPriceMap });
 
             console.log({
-              orderBookPriceMap: this.orderBookPriceMap,
+              orderBookPriceMap,
             });
 
             this.orderbookDataArbitrage(
-              this.orderBookPriceMap,
-              smallQuantity
+              orderBookPriceMap,
+              smallQuantity,
+              actions,
+              checkCondition
               // symbolKey,
               // exchangeName
             );
@@ -140,7 +102,9 @@ class Trigger {
    */
   orderbookDataArbitrage(
     orderBookPriceMap: orderBookMap,
-    smallQuantity: any
+    smallQuantity: any,
+    actions: any[],
+    checkCondition: Function
     // symbolKey: any,
     // exchangeName: string
   ) {
@@ -157,15 +121,14 @@ class Trigger {
             orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
 
           if (bidPrice >= askPrice) {
-            if (this.checkCondition(askPrice, bidPrice).valid) {
-              this.actions.forEach((singleAction) => {
+            if (checkCondition(askPrice, bidPrice).valid) {
+              actions.forEach((singleAction) => {
                 singleAction.excuteAction({
                   symbol,
                   askPriceExchange: askPriceExchangeKey,
                   bidPriceExchange: bidPriceExchangeKey,
                   message: "Percentage differnce is greater than 1.0",
-                  percentage_diffr: this.checkCondition(askPrice, bidPrice)
-                    .data,
+                  percentage_diffr: checkCondition(askPrice, bidPrice).data,
                   timestamp: Date.now(),
                   smallQuantity,
                 });
@@ -176,7 +139,7 @@ class Trigger {
                 symbol,
                 askPriceExchange: askPriceExchangeKey,
                 bidPriceExchange: bidPriceExchangeKey,
-                percentage_diffr: this.checkCondition(askPrice, bidPrice).data,
+                percentage_diffr: checkCondition(askPrice, bidPrice).data,
                 timestamp: Date.now(),
                 smallQuantity,
               });

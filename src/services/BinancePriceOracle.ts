@@ -9,6 +9,8 @@ export default class BinancePriceOracle extends PriceOracle {
   binanceTradePairsList: string[];
   exchangeName: "binance";
   orderbookhandlerMethod: "depthUpdate";
+  lastUpdateIdMap: { [key: string]: number };
+  previousValueOfu: number;
 
   constructor() {
     super();
@@ -18,6 +20,8 @@ export default class BinancePriceOracle extends PriceOracle {
     this.binanceTradePairsList = ["btcusdt", "ethbtc"];
     this.exchangeName = "binance";
     this.orderbookhandlerMethod = "depthUpdate";
+    this.lastUpdateIdMap = {};
+    this.previousValueOfu = 0;
   }
 
   /**
@@ -60,7 +64,7 @@ export default class BinancePriceOracle extends PriceOracle {
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = () => {
+  subscribeOrderBookDataForAllTradePairs = async () => {
     let id = 0;
     for (const tradePair of this.binanceTradePairsList) {
       const subscriberObject = {
@@ -69,9 +73,55 @@ export default class BinancePriceOracle extends PriceOracle {
         id: ++id,
       };
       this.subscribeStream(subscriberObject, this.binanceWsInstance);
+      try {
+        await this.createLastUpdateIdMap(tradePair);
+      } catch (error) {
+        console.error({ newError: error });
+      }
     }
     this.getBinanceMessageStream();
   };
+
+  createLastUpdateIdMap = async (tradePair: string) => {
+    tradePair = tradePair.toUpperCase();
+
+    const depthSnapshot = await axios.get(
+      `https://api.binance.com/api/v3/depth?symbol=${tradePair}&limit=1000`
+    );
+
+    this.lastUpdateIdMap[tradePair] =
+      depthSnapshot.data && depthSnapshot.data.lastUpdateId;
+  };
+
+  checkOrderBookData(orderbookData: any): boolean {
+    // console.log({ orderbookData });
+
+    const { s: symbol, a: asks, b: bids, u, U } = orderbookData;
+
+    const lastUpdateIdForSymbol = this.lastUpdateIdMap[symbol];
+
+    if (u <= lastUpdateIdForSymbol || U > lastUpdateIdForSymbol + 1) {
+      return false;
+    }
+
+    /*
+      The data in each event is the absolute quantity for a price level.
+      If the quantity is 0, remove the price level.
+    */
+    if (!asks[0][1] || !bids[0][1]) {
+      return false;
+    }
+
+    // each new event's U should be equal to the previous event's u+1.
+
+    if (U !== this.previousValueOfu + 1) return false;
+
+    this.previousValueOfu = u;
+
+    console.log({ lastUpdateIdForSymbol });
+
+    return true;
+  }
 
   /**
    * call the base class method "getMessageStream" for
@@ -79,6 +129,7 @@ export default class BinancePriceOracle extends PriceOracle {
    * @returns void
    */
   getBinanceMessageStream = () => {
+    console.log({ lastUpdateIdMap: this.lastUpdateIdMap });
     this.getMessageStream(this.binanceWsInstance, {
       asks: "a",
       bids: "b",

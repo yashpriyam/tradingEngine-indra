@@ -101,6 +101,7 @@ class PriceOracle {
               asks: this.getPathValue(message, dataFormat.asks),
               bids: this.getPathValue(message, dataFormat.bids),
               symbol: this.getPathValue(message, dataFormat.symbol),
+              data: message,
             })
           );
         } else if (
@@ -114,6 +115,7 @@ class PriceOracle {
                 asks: this.getPathValue(message, dataFormat.asks),
                 bids: this.getPathValue(message, dataFormat.bids),
                 symbol: this.getPathValue(message, dataFormat.symbol),
+                data: message,
               });
             });
         } else {

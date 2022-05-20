@@ -59,7 +59,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = () => {
+  subscribeOrderBookDataForAllTradePairs = async () => {
     let id = 0;
     for (const tradePair of this.CryptocomTradePairsList) {
       const subscriberObject = {

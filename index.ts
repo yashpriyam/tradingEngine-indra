@@ -141,7 +141,7 @@ class ArbitrageTrigger extends Trigger {
       };
     }
 
-    console.log({ value: this.allTradePairsExchangeMap });
+    // console.log({ value: this.allTradePairsExchangeMap });
 
     this.createCommonSymbolMap();
     this.createOrderBookPriceMap();

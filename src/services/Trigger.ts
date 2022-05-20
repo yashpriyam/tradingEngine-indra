@@ -19,7 +19,7 @@ class Trigger {
       const socketClient = priceOracleInstance;
       const exchangeName = socketClient.exchangeName;
 
-      socketClient.subscribeOrderBookDataForAllTradePairs();
+      await socketClient.subscribeOrderBookDataForAllTradePairs();
 
       /**
        * this handler handles the message for orderbook data, it create a object map
@@ -28,8 +28,13 @@ class Trigger {
        */
       socketClient.setHandler(
         socketClient.orderbookhandlerMethod,
-        (params: { asks: number[]; bids: number[]; symbol: string }) => {
-          let { asks, bids, symbol } = params;
+        (params: {
+          asks: number[];
+          bids: number[];
+          symbol: string;
+          data: string;
+        }) => {
+          let { asks, bids, symbol, data } = params;
 
           // asks and bids may be empty or undefined
           if (
@@ -40,9 +45,9 @@ class Trigger {
           )
             return;
 
-          let symbolKey: any = "";
-
-          // getting a common key to store data in orderbookPriceMap
+          if (priceOracleInstance.exchangeName === "binance") {
+            if (!priceOracleInstance.checkOrderBookData(data)) return;
+          }
 
           const askPrice = asks[0][0]; // lowest of asks
           const askQuantity = asks[0][1];
@@ -50,6 +55,11 @@ class Trigger {
           const bidPrice = bids[0][0];
           // const bidPrice = bids[bids.length - 1][0]; // lowest of bids
           const bidQuantity = bids[0][1];
+
+          let symbolKey: any = "";
+
+          // TODO - get a common key to store data in orderbookPriceMap
+          symbolKey = symbol;
 
           // get a key value pair whose quantity is lesser
           const smallQuantity =

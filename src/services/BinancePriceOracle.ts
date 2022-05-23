@@ -81,7 +81,7 @@ export default class BinancePriceOracle extends PriceOracle {
       depthSnapshot.data && depthSnapshot.data.lastUpdateId;
   };
 
-  checkOrderBookData(orderbookData: any): boolean {
+  checkOrderBookData = (orderbookData: any): boolean => {
     // console.log({ orderbookData });
 
     const { s: symbol, a: asks, b: bids, u, U } = orderbookData;
@@ -109,7 +109,7 @@ export default class BinancePriceOracle extends PriceOracle {
     console.log({ lastUpdateIdForSymbol });
 
     return true;
-  }
+  };
 
   /**
    * call the base class method "getMessageStream" for

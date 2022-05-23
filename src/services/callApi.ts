@@ -4,7 +4,7 @@ import BinancePriceOracle from "./BinancePriceOracle";
  * child process execution code
  */
 process.on("message", (message: any) => {
-  console.log({ message });
+  // console.log({ message });
 
   const binancePriceOracleInstance = new BinancePriceOracle();
   // console.log({ binancePriceOracleInstance });

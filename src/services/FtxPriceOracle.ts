@@ -4,7 +4,7 @@ import PriceOracle from "./PriceOracle";
 export default class FtxPriceOracle extends PriceOracle {
   FtxWsInstance: {};
   wsUrl: string;
-  FtxTradePairsList: string[];
+  tradePairsList: string[];
   exchangeName: "ftx";
   orderbookhandlerMethod: "orderbook";
 
@@ -12,8 +12,7 @@ export default class FtxPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://ftx.com/ws/";
     this.FtxWsInstance = this._createSocket(this.wsUrl);
-    // this.FtxTradePairsList = [];
-    this.FtxTradePairsList = ["BTC/USDT", "ETH/BTC"];
+    this.tradePairsList = ["BTC/USDT", "ETH/BTC"];
     this.exchangeName = "ftx";
     this.orderbookhandlerMethod = "orderbook";
   }
@@ -30,26 +29,24 @@ export default class FtxPriceOracle extends PriceOracle {
     exchangeInfo.data.result.forEach((symbolObj: any) => {
       if (symbolObj.volumeUsd24h > 5000000) {
         tradePairs.push(symbolObj.name);
-
-        commonTradePairMap[symbolObj.name] = symbolObj.name
-          .replace(/[^a-z0-9]/gi, "")
-          .toUpperCase();
       }
     });
 
-    // console.log({ tradePairs, commonTradePairMap });
-
-    this.FtxTradePairsList = tradePairs.splice(0, 100);
-    return { commonTradePairMap };
+    this.tradePairsList = [...tradePairs]
+    return this.tradePairsList;
   };
+
+  updateTradePairsList = (tradePairsArray: string[]) => {
+    this.tradePairsList = [...tradePairsArray]
+  }
 
   /**
    * subscribe to orderbook stream of ftx exchange
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = async () => {
-    for (const tradePair of this.FtxTradePairsList) {
+  subscribeOrderBookDataForAllTradePairs = () => {
+    for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
         op: "subscribe",
         market: tradePair,

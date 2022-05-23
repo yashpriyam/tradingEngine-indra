@@ -4,7 +4,7 @@ import PriceOracle from "./PriceOracle";
 export default class CryptocomPriceOracle extends PriceOracle {
   CryptocomWsInstance: {};
   wsUrl: string;
-  CryptocomTradePairsList: string[];
+  tradePairsList: string[];
   exchangeName: "cryptocom";
   orderbookhandlerMethod: "book";
 
@@ -12,8 +12,8 @@ export default class CryptocomPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.crypto.com/v2/market";
     this.CryptocomWsInstance = this._createSocket(this.wsUrl);
-    // this.CryptocomTradePairsList = [];
-    this.CryptocomTradePairsList = ["BTC_USDT", "ETH_BTC"];
+    // this.tradePairsList = [];
+    this.tradePairsList = ["BTC_USDT", "ETH_BTC"];
     this.exchangeName = "cryptocom";
     this.orderbookhandlerMethod = "book";
   }
@@ -41,17 +41,11 @@ export default class CryptocomPriceOracle extends PriceOracle {
       tradePairsList.data.result.data.forEach((symbolObj: any) => {
         if (symbolObj.v > 5000000) {
           tradePairs.push(symbolObj.i);
-          commonTradePairMap[symbolObj.i] = symbolObj.i
-            .replace(/[^a-z0-9]/gi, "")
-            .toUpperCase();
         }
       });
 
-    // console.log({ tradePairs, commonTradePairMap });
-
-    this.CryptocomTradePairsList = tradePairs.splice(1, 90);
-
-    return { commonTradePairMap };
+    this.tradePairsList = [...tradePairs]
+    return this.tradePairsList
   };
 
   /**
@@ -61,7 +55,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
    */
   subscribeOrderBookDataForAllTradePairs = async () => {
     let id = 0;
-    for (const tradePair of this.CryptocomTradePairsList) {
+    for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
         id: ++id,
         method: "subscribe",
@@ -73,6 +67,10 @@ export default class CryptocomPriceOracle extends PriceOracle {
     }
     this.getCryptocomMessageStream();
   };
+
+  updateTradePairsList = (tradePairsArray: string[]) => {
+    this.tradePairsList = [...tradePairsArray]
+  }
 
   /**
    * call the base class method "getMessageStream" for

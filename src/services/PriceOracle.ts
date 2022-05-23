@@ -19,7 +19,6 @@ class PriceOracle {
   subscribeStream(subscriberObject: Object, wsInstance: any) {
     if (this.isConnected) {
       wsInstance.send(JSON.stringify(subscriberObject));
-      console.log("Listening to stream data for " + subscriberObject);
     } else {
       setTimeout(() => {
         this.subscribeStream(subscriberObject, wsInstance);
@@ -122,7 +121,7 @@ class PriceOracle {
           // console.log({ message });
         }
       } catch (e) {
-        console.log("Parse message failed", e);
+        console.error("Parse message failed", e);
       }
     };
   }
@@ -160,7 +159,7 @@ class PriceOracle {
     if (!this._handlers.has(method)) {
       this._handlers.set(method, []);
     }
-    this._handlers.get(method).push(callback);
+    this._handlers.get(method).push(callback);    
   }
 }
 

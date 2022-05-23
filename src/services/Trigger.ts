@@ -65,28 +65,23 @@ class Trigger {
           const smallQuantity =
             askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
 
-          if (!orderBookPriceMap[symbolKey]) orderBookPriceMap[symbolKey] = {};
+          // New logic: for updating orderBookPriceMap from ws data stream
+          // orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
+          // orderBookPriceMap[symbolMap[data]][exchangeName].bidPrice
 
-          if (!orderBookPriceMap[symbolKey][exchangeName])
-            orderBookPriceMap[symbolKey][exchangeName] = {};
-
-          const previousAskPrice =
-            orderBookPriceMap[symbolKey][exchangeName].askPrice;
-
-          const previousBidPrice =
-            orderBookPriceMap[symbolKey][exchangeName].bidPrice;
+          let previousAskPrice =
+            orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].askPrice,
+          previousBidPrice =
+            orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].bidPrice;
 
           if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
-            orderBookPriceMap[symbolKey][exchangeName] = {
+            orderBookPriceMap[commonSymbolMap[symbol]][exchangeName] = {
               askPrice,
               bidPrice,
+              exchangeSymbol: symbol
             };
 
             // logger.log({ orderBookPriceMap: this.orderBookPriceMap });
-
-            console.log({
-              orderBookPriceMap,
-            });
 
             this.orderbookDataArbitrage(
               orderBookPriceMap,
@@ -117,7 +112,6 @@ class Trigger {
     // symbolKey: any,
     // exchangeName: string
   ) {
-    // console.log({ length: Object.keys(orderBookPriceMap).length });
     for (const symbol in orderBookPriceMap) {
       for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
         let askPrice: number =
@@ -129,32 +123,34 @@ class Trigger {
           let bidPrice: number =
             orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
 
+          const { valid, data } = checkCondition(askPrice, bidPrice)
+
           if (bidPrice >= askPrice) {
-            if (checkCondition(askPrice, bidPrice).valid) {
+            if (valid) {
               actions.forEach((singleAction) => {
                 singleAction.excuteAction({
                   symbol,
                   askPriceExchange: askPriceExchangeKey,
                   bidPriceExchange: bidPriceExchangeKey,
                   message: "Percentage differnce is greater than 1.0",
-                  percentage_diffr: checkCondition(askPrice, bidPrice).data,
+                  percentage_diffr: data,
                   timestamp: Date.now(),
                   smallQuantity,
                 });
               });
             } else {
-              logger.log({
+              console.log({
                 message: "Pecentage differnce is less than 1.0",
                 symbol,
                 askPriceExchange: askPriceExchangeKey,
                 bidPriceExchange: bidPriceExchangeKey,
-                percentage_diffr: checkCondition(askPrice, bidPrice).data,
+                percentage_diffr: data,
                 timestamp: Date.now(),
                 smallQuantity,
               });
             }
           } else {
-            // console.log({ askPrice, bidPrice });
+            console.log('bidPrice is lower than askPrice', { askPrice, bidPrice });
           }
         }
       }

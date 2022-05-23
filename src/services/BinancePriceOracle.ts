@@ -1,12 +1,12 @@
 import axios from "axios";
-import { zb } from "ccxt.pro";
+// import { zb } from "ccxt.pro";
 import PriceOracle from "./PriceOracle";
 // import fetch from "node-fetch";
 
 export default class BinancePriceOracle extends PriceOracle {
   binanceWsInstance: {};
   wsUrl: string;
-  binanceTradePairsList: string[];
+  tradePairsList: string[];
   exchangeName: "binance";
   orderbookhandlerMethod: "depthUpdate";
   lastUpdateIdMap: { [key: string]: number };
@@ -16,8 +16,7 @@ export default class BinancePriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.binance.com:9443/ws";
     this.binanceWsInstance = this._createSocket(this.wsUrl);
-    // this.binanceTradePairsList = [];
-    this.binanceTradePairsList = ["btcusdt", "ethbtc"];
+    this.tradePairsList = ["btcusdt", "ethbtc"];
     this.exchangeName = "binance";
     this.orderbookhandlerMethod = "depthUpdate";
     this.lastUpdateIdMap = {};
@@ -30,7 +29,6 @@ export default class BinancePriceOracle extends PriceOracle {
    */
   getTradePairsList = async () => {
     let tradePairs: any = [];
-    const commonTradePairMap = {};
 
     let tradePairsList = await axios.get(
       "https://api.binance.com/api/v3/ticker/24hr"
@@ -39,25 +37,15 @@ export default class BinancePriceOracle extends PriceOracle {
     tradePairsList.data.forEach((symbolObj: any) => {
       if (symbolObj.volume > 5000000) {
         tradePairs.push(symbolObj.symbol.toLowerCase());
-        commonTradePairMap[symbolObj.symbol.toLowerCase()] = symbolObj.symbol
-          .replace(/[^a-z0-9]/gi, "")
-          .toUpperCase();
       }
     });
 
-    // const tradePairListOfExchangeInCommonFormat = {} // {ETHBTC: eth_btc, BTCUSD: btc_usd}
-    // tradePairs.forEach((tradePair: string, idx: number) => {
-    //   // [A-Z, a-z, 0-9]
-    //   // const commonFormatOfTradePair = tradePair.allTheFilters
-    //   tradePairListOfExchangeInCommonFormat[commonFormatOfTradePair] = tradePair
-    // })
-
-    this.binanceTradePairsList = tradePairs.splice(1, 5);
-
-    return {
-      commonTradePairMap,
-    };
+    return this.tradePairsList = [...tradePairs]
   };
+
+  updateTradePairsList = (tradePairsArray: string[]) => {
+    this.tradePairsList = [...tradePairsArray]
+  }
 
   /**
    * subscribe to orderbook stream of binance exchange
@@ -66,10 +54,10 @@ export default class BinancePriceOracle extends PriceOracle {
    */
   subscribeOrderBookDataForAllTradePairs = async () => {
     let id = 0;
-    for (const tradePair of this.binanceTradePairsList) {
+    for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
         method: "SUBSCRIBE",
-        params: [`${tradePair}@depth`],
+        params: [`${tradePair}@depthUpdate`],
         id: ++id,
       };
       this.subscribeStream(subscriberObject, this.binanceWsInstance);

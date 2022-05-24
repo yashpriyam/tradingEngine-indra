@@ -40,12 +40,12 @@ export default class BinancePriceOracle extends PriceOracle {
       }
     });
 
-    return this.tradePairsList = [...tradePairs]
+    return (this.tradePairsList = [...tradePairs]);
   };
 
   updateTradePairsList = (tradePairsArray: string[]) => {
-    this.tradePairsList = [...tradePairsArray]
-  }
+    this.tradePairsList = [...tradePairsArray];
+  };
 
   /**
    * subscribe to orderbook stream of binance exchange

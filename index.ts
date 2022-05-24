@@ -9,7 +9,7 @@ import Trigger from "./src/services/Trigger";
 import { fork } from "child_process";
 
 const LogAction = new Action(console.log);
-console.log({logger});
+console.log({ logger });
 
 // const logzLoggerAction = new Action(logger.log);
 
@@ -94,7 +94,6 @@ class ArbitrageTrigger extends Trigger {
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};
     this.commonSymbolMap = new Map();
-
   }
 
   // getting all trade pairs from each exchange: allTradePairsExchangeMap
@@ -102,7 +101,9 @@ class ArbitrageTrigger extends Trigger {
     for (const priceOracleInstance of this.priceOracleInstances) {
       this.allTradePairsExchangeMap = {
         ...this.allTradePairsExchangeMap,
-        [priceOracleInstance.exchangeName]: [...(await priceOracleInstance.getTradePairsList())],
+        [priceOracleInstance.exchangeName]: [
+          ...(await priceOracleInstance.getTradePairsList()),
+        ],
       };
     }
 
@@ -112,48 +113,54 @@ class ArbitrageTrigger extends Trigger {
   };
 
   createCommonSymbolMap = () => {
-    const commonSymbolFreq = {}
+    const commonSymbolFreq = {};
     // const commonSymbolWithFreq1 = {}
 
     for (let exchangeKey in this.allTradePairsExchangeMap) {
       let tradePairsForExchange: string[] =
         this.allTradePairsExchangeMap[exchangeKey];
 
-
       tradePairsForExchange.forEach((tradePair) => {
-        const commonSymbol = tradePair
-          .replace(/[^a-z0-9]/gi, "")
-          .toUpperCase();
-        this.commonSymbolMap[tradePair] = commonSymbol
-        commonSymbolFreq[commonSymbol] = ++commonSymbolFreq[commonSymbol] || 1
+        const commonSymbol = tradePair.replace(/[^a-z0-9]/gi, "").toUpperCase();
+        this.commonSymbolMap[tradePair] = commonSymbol;
+        commonSymbolFreq[commonSymbol] = ++commonSymbolFreq[commonSymbol] || 1;
         this.orderBookPriceMap[commonSymbol] = {
           ...this.orderBookPriceMap[commonSymbol],
-          [exchangeKey]: { askPrice: '', bidPrice: '', exchangeSymbol: tradePair }
-        }
+          [exchangeKey]: {
+            askPrice: "",
+            bidPrice: "",
+            exchangeSymbol: tradePair,
+          },
+        };
       });
-      this.allTradePairsExchangeMap[exchangeKey] = {...this.commonSymbolMap}
-      // console.log({ allTradePairsExchangeMap: this.allTradePairsExchangeMap });
+      this.allTradePairsExchangeMap[exchangeKey] = { ...this.commonSymbolMap };
     }
-    console.log({comm: this.commonSymbolMap});
-    
+    console.log({ comm: this.commonSymbolMap });
+
     // get rid of all commonSymbols with value 1 in commonSymbolFreq
     for (const [key, value] of Object.entries(commonSymbolFreq)) {
       if (value === 1) {
-        const [exchangeName, { exchangeSymbol }]: [string, any] = 
-        [Object.keys(this.orderBookPriceMap[key])[0], Object.values(this.orderBookPriceMap[key])[0]]
-        
-        delete this.allTradePairsExchangeMap[exchangeName][exchangeSymbol]
-        delete this.commonSymbolMap[exchangeSymbol]
-        delete this.orderBookPriceMap[key]
+        const [exchangeName, { exchangeSymbol }]: [string, any] = [
+          Object.keys(this.orderBookPriceMap[key])[0],
+          Object.values(this.orderBookPriceMap[key])[0],
+        ];
+
+        delete this.allTradePairsExchangeMap[exchangeName][exchangeSymbol];
+        delete this.commonSymbolMap[exchangeSymbol];
+        delete this.orderBookPriceMap[key];
       }
     }
 
     for (const exchangeInstance of this.priceOracleInstances) {
-      const { exchangeName, updateTradePairsList }: any = exchangeInstance      
-      updateTradePairsList([...Object.keys(this.allTradePairsExchangeMap[exchangeName])])
+      const { exchangeName, updateTradePairsList }: any = exchangeInstance;
+      updateTradePairsList([
+        ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),
+      ]);
     }
 
-    console.log({allTradePairsExchangeMap: this.allTradePairsExchangeMap});
+    console.log({ allTradePairsExchangeMap: this.allTradePairsExchangeMap });
+
+    console.log({ orderBookPriceMap: this.orderBookPriceMap });
   };
 
   listenArbirageStream = () => {
@@ -166,6 +173,8 @@ class ArbitrageTrigger extends Trigger {
     );
   };
 }
+
+export const allActions = [LogAction];
 
 (async () => {
   let arbitrageTriggerInstance = new ArbitrageTrigger();

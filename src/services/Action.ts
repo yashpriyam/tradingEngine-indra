@@ -15,6 +15,7 @@ class Action {
    * @param data data to pass to the callback function
    */
   excuteAction(data: any) {
+    console.log("action executed");
     this.callback(data);
   }
 }

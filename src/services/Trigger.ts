@@ -1,5 +1,6 @@
 import logger from "../lib/logger";
 import Action from "./Action";
+import { fork } from "child_process";
 
 class Trigger {
   /**
@@ -17,7 +18,7 @@ class Trigger {
   ) {
     for (let priceOracleInstance of priceOraclesInstances) {
       const socketClient = priceOracleInstance;
-      const exchangeName = socketClient.exchangeName;
+      const exchangeName = priceOracleInstance.exchangeName;
 
       await socketClient.subscribeOrderBookDataForAllTradePairs();
 
@@ -36,6 +37,11 @@ class Trigger {
         }) => {
           let { asks, bids, symbol, data } = params;
 
+          // console.log({
+          //   params,
+          //   exchangeName,
+          // });
+
           // asks and bids may be empty or undefined
           if (
             typeof asks === "undefined" ||
@@ -45,7 +51,12 @@ class Trigger {
           )
             return;
 
-          if (priceOracleInstance.exchangeName === "binance") {
+          // console.log({
+          //   params,
+          //   exchangeName,
+          // });
+
+          if (exchangeName === "binance") {
             if (!priceOracleInstance.checkOrderBookData(data)) return;
           }
 
@@ -82,9 +93,9 @@ class Trigger {
               orderBookPriceMap,
               smallQuantity,
               actions,
-              checkCondition
-              // commonSymbolKey,
-              // exchangeName
+              checkCondition,
+              commonSymbolMap[symbol],
+              exchangeName
             );
           }
         }
@@ -103,13 +114,59 @@ class Trigger {
     orderBookPriceMap: orderBookMap,
     smallQuantity: any,
     actions: any[],
-    checkCondition: Function
-    // commonSymbolKey: any,
-    // exchangeName: string
+    checkCondition: Function,
+    commonSymbolKey: string,
+    exchangeName: string
   ) {
-    // console.log({ length: Object.keys(orderBookPriceMap).length });
+    // Efficient approach
+    const symbolDataToUpdate = orderBookPriceMap[commonSymbolKey];
 
-    for (const symbol in orderBookPriceMap) {
+    // this will be an object of { askPrice, bidPrice }
+    const updatedExchangeData = symbolDataToUpdate[exchangeName];
+
+    for (const exchangeNameKey in symbolDataToUpdate) {
+      let orderbookExchangeData = symbolDataToUpdate[exchangeNameKey];
+
+      let askPriceExchange = "",
+        bidPriceExchange = "";
+
+      if (orderbookExchangeData.bidPrice > updatedExchangeData.askPrice) {
+        askPriceExchange = exchangeName;
+        bidPriceExchange = exchangeNameKey;
+
+        // TODO -  for getting small quantity we need to think again,
+
+        this.logArbitrageMessage(
+          askPriceExchange,
+          bidPriceExchange,
+          updatedExchangeData.askPrice,
+          orderbookExchangeData.bidPrice,
+          commonSymbolKey,
+          checkCondition,
+          smallQuantity
+        );
+      }
+
+      if (updatedExchangeData.bidPrice > orderbookExchangeData.askPrice) {
+        askPriceExchange = exchangeNameKey;
+        bidPriceExchange = exchangeName;
+
+        this.logArbitrageMessage(
+          askPriceExchange,
+          bidPriceExchange,
+          orderbookExchangeData.askPrice,
+          updatedExchangeData.bidPrice,
+          commonSymbolKey,
+          checkCondition,
+          smallQuantity
+        );
+      } else {
+        console.log({ updatedExchangeData, orderbookExchangeData });
+        continue;
+      }
+    }
+
+    /* for (const symbol in orderBookPriceMap) {
       for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
         let askPrice: number =
           orderBookPriceMap[symbol][askPriceExchangeKey].askPrice;
@@ -124,8 +181,17 @@ class Trigger {
 
           if (bidPrice >= askPrice) {
             if (valid) {
-              actions.forEach((singleAction) => {
-                singleAction.excuteAction({
+              // actions.forEach((singleAction) => {
+              const forkedProcess = fork(`${__dirname}/callApi.js`);
+
+              forkedProcess.send({
+                // method: singleAction.excuteAction.toString(),
+
+                method: function hello() {
+                  console.log("hello");
+                }.toString(),
+
+                data: {
                   symbol,
                   askPriceExchange: askPriceExchangeKey,
                   bidPriceExchange: bidPriceExchangeKey,
@@ -133,8 +199,19 @@ class Trigger {
                   percentage_diffr: data,
                   timestamp: Date.now(),
                   smallQuantity,
-                });
+                },
               });
+
+              // singleAction.excuteAction({
+              //   symbol,
+              //   askPriceExchange: askPriceExchangeKey,
+              //   bidPriceExchange: bidPriceExchangeKey,
+              //   message: "Percentage differnce is greater than 1.0",
+              //   percentage_diffr: data,
+              //   timestamp: Date.now(),
+              //   smallQuantity,
+              // });
+              // });
             } else {
               console.log({
                 message: "Pecentage differnce is less than 1.0",
@@ -154,7 +231,7 @@ class Trigger {
           }
         }
       }
-    }
+    } */
   }
 
   logArbitrageMessage = (
@@ -164,28 +241,36 @@ class Trigger {
     bidPrice: number,
     symbol: string,
     checkCondition: Function,
-    smallQuantity: number,
-    actions: any[]
+    smallQuantity: number
   ) => {
-    if (checkCondition(askPrice, bidPrice).valid) {
-      actions.forEach((singleAction) => {
-        singleAction.excuteAction({
+    const { valid, data } = checkCondition(askPrice, bidPrice);
+
+    if (valid) {
+      const forkedProcess = fork(`${__dirname}/callApi.js`);
+
+      forkedProcess.send({
+        // method: singleAction.excuteAction.toString(),
+        method: function hello() {
+          console.log("hello");
+        }.toString(),
+
+        data: {
           symbol,
           askPriceExchange,
           bidPriceExchange,
           message: "Percentage differnce is greater than 1.0",
-          percentage_diffr: checkCondition(askPrice, bidPrice).data,
+          percentage_diffr: data,
           timestamp: Date.now(),
           smallQuantity,
-        });
+        },
       });
     } else {
-      logger.log({
+      console.log({
         message: "Pecentage differnce is less than 1.0",
         symbol,
         askPriceExchange,
         bidPriceExchange,
-        percentage_diffr: checkCondition(askPrice, bidPrice).data,
+        percentage_diffr: data,
         timestamp: Date.now(),
         smallQuantity,
       });

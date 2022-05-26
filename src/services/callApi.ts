@@ -16,6 +16,7 @@ process.on("message", (message: any) => {
   //   binancePriceOracleInstance: JSON.stringify(binancePriceOracleInstance),
   //   stringFunction,
   // });
+  // console.log({ message });
 
   const { data, method } = message;
 

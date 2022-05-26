@@ -1,5 +1,5 @@
 "use strict";
-import logger from "./src/lib/logger";
+import { LogzioLogger } from "./src/lib/logzioLogger";
 import Action from "./src/services/Action";
 import BinancePriceOracle from "./src/services/BinancePriceOracle";
 import checkForArbitrage from "./src/services/checkArbitrage";
@@ -9,7 +9,7 @@ import Trigger from "./src/services/Trigger";
 require("dotenv").config();
 
 const LogAction = new Action(console.log);
-// const logzLoggerAction = new Action(logger.log);
+const logzLoggerAction = new Action(LogzioLogger.info);
 
 /**
  * create an instance for arbitrage trigger to trigger the orderbook data
@@ -64,8 +64,6 @@ class ArbitrageTrigger extends Trigger {
       };
     }
 
-    // console.log({ value: this.allTradePairsExchangeMap });
-
     this.createCommonSymbolMap();
   };
 
@@ -92,7 +90,6 @@ class ArbitrageTrigger extends Trigger {
       });
       this.allTradePairsExchangeMap[exchangeKey] = { ...this.commonSymbolMap };
     }
-    console.log({ comm: this.commonSymbolMap });
 
     // get rid of all commonSymbols with value 1 in commonSymbolFreq
     for (const [key, value] of Object.entries(commonSymbolFreq)) {
@@ -127,7 +124,7 @@ class ArbitrageTrigger extends Trigger {
   };
 }
 
-export const allActions = [LogAction];
+export const allActions = [LogAction, logzLoggerAction];
 
 (async () => {
   let arbitrageTriggerInstance = new ArbitrageTrigger();

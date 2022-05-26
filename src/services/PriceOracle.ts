@@ -1,4 +1,5 @@
 import * as WebSocket from "ws";
+import { LogzioLogger } from "../lib/logzioLogger";
 
 /** base class to get exchange data */
 class PriceOracle {
@@ -56,24 +57,24 @@ class PriceOracle {
     this._ws = new WebSocket.default(`${wsUrl}`);
 
     this._ws.onopen = () => {
-      console.log("ws connected");
+      LogzioLogger.info("ws connected");
       this.isConnected = true;
     };
 
     this._ws.on("pong", () => {
-      console.log("receieved pong from server");
+      LogzioLogger.info("receieved pong from server");
     });
     this._ws.on("ping", () => {
-      console.log("receieved ping from server");
+      LogzioLogger.info("receieved ping from server");
       this._ws.pong();
     });
 
     this._ws.onclose = () => {
-      console.log("ws closed");
+      LogzioLogger.warn("ws closed");
     };
 
     this._ws.onerror = (err: any) => {
-      console.log("ws error", err);
+      LogzioLogger.error(`web socket error : ${err}`);
     };
 
     this.heartBeat();
@@ -118,10 +119,10 @@ class PriceOracle {
               });
             });
         } else {
-          // console.log({ message });
+          // LogzioLogger.log({ message });
         }
-      } catch (e) {
-        console.error("Parse message failed", e);
+      } catch (error) {
+        LogzioLogger.error(`Parse message failed ${error}`);
       }
     };
   }
@@ -143,7 +144,7 @@ class PriceOracle {
     setInterval(() => {
       if (this._ws.readyState === WebSocket.OPEN) {
         this._ws.ping();
-        console.log("ping server");
+        LogzioLogger.info("ping server");
       }
     }, 5000);
   }
@@ -159,7 +160,7 @@ class PriceOracle {
     if (!this._handlers.has(method)) {
       this._handlers.set(method, []);
     }
-    this._handlers.get(method).push(callback);    
+    this._handlers.get(method).push(callback);
   }
 }
 

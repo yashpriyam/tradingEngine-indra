@@ -1,4 +1,5 @@
 import axios from "axios";
+import { LogzioLogger } from "../lib/logzioLogger";
 // import { zb } from "ccxt.pro";
 import PriceOracle from "./PriceOracle";
 // import fetch from "node-fetch";
@@ -64,7 +65,7 @@ export default class BinancePriceOracle extends PriceOracle {
       try {
         await this.createLastUpdateIdMap(tradePair);
       } catch (error) {
-        console.error({ newError: error });
+        LogzioLogger.error(error);
       }
     }
     this.getBinanceMessageStream();
@@ -82,8 +83,6 @@ export default class BinancePriceOracle extends PriceOracle {
   };
 
   checkOrderBookData = (orderbookData: any): boolean => {
-    // console.log({ orderbookData });
-
     const { s: symbol, a: asks, b: bids, u, U } = orderbookData;
 
     const lastUpdateIdForSymbol = this.lastUpdateIdMap[symbol];
@@ -106,8 +105,6 @@ export default class BinancePriceOracle extends PriceOracle {
 
     this.previousValueOfu = u;
 
-    console.log({ lastUpdateIdForSymbol });
-
     return true;
   };
 
@@ -117,7 +114,6 @@ export default class BinancePriceOracle extends PriceOracle {
    * @returns void
    */
   getBinanceMessageStream = () => {
-    console.log({ lastUpdateIdMap: this.lastUpdateIdMap });
     this.getMessageStream(this.binanceWsInstance, {
       asks: "a",
       bids: "b",

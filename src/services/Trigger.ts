@@ -1,6 +1,6 @@
-import logger from "../lib/logger";
 import Action from "./Action";
 import { fork } from "child_process";
+import { LogzioLogger } from "../lib/logzioLogger";
 
 class Trigger {
   /**
@@ -36,6 +36,8 @@ class Trigger {
           data: string;
         }) => {
           let { asks, bids, symbol, data } = params;
+
+          LogzioLogger.info(JSON.stringify(params));
 
           // console.log({
           //   params,
@@ -130,7 +132,11 @@ class Trigger {
       let askPriceExchange = "",
         bidPriceExchange = "";
 
-      if (orderbookExchangeData.bidPrice && updatedExchangeData.askPrice && (orderbookExchangeData.bidPrice < updatedExchangeData.askPrice)) {
+      if (
+        orderbookExchangeData.bidPrice &&
+        updatedExchangeData.askPrice &&
+        orderbookExchangeData.bidPrice < updatedExchangeData.askPrice
+      ) {
         askPriceExchange = exchangeName;
         bidPriceExchange = exchangeNameKey;
 
@@ -147,7 +153,11 @@ class Trigger {
         );
       }
 
-      if (updatedExchangeData.bidPrice && orderbookExchangeData.askPrice && (updatedExchangeData.bidPrice > orderbookExchangeData.askPrice)) {
+      if (
+        updatedExchangeData.bidPrice &&
+        orderbookExchangeData.askPrice &&
+        updatedExchangeData.bidPrice > orderbookExchangeData.askPrice
+      ) {
         askPriceExchange = exchangeNameKey;
         bidPriceExchange = exchangeName;
 
@@ -161,7 +171,9 @@ class Trigger {
           smallQuantity
         );
       } else {
-        console.log({ updatedExchangeData, orderbookExchangeData });
+        LogzioLogger.info(
+          JSON.stringify({ updatedExchangeData, orderbookExchangeData })
+        );
         continue;
       }
     }
@@ -188,7 +200,7 @@ class Trigger {
                 // method: singleAction.excuteAction.toString(),
 
                 method: function hello() {
-                  console.log("hello");
+                  // something
                 }.toString(),
 
                 data: {
@@ -251,7 +263,7 @@ class Trigger {
       forkedProcess.send({
         // method: singleAction.excuteAction.toString(),
         method: function hello() {
-          console.log("hello");
+          // console.log("hello");
         }.toString(),
 
         data: {
@@ -265,15 +277,17 @@ class Trigger {
         },
       });
     } else {
-      console.log({
-        message: "Pecentage differnce is less than 1.0",
-        symbol,
-        askPriceExchange,
-        bidPriceExchange,
-        percentage_diffr: data,
-        timestamp: Date.now(),
-        smallQuantity,
-      });
+      LogzioLogger.info(
+        JSON.stringify({
+          message: "Pecentage differnce is less than 1.0",
+          symbol,
+          askPriceExchange,
+          bidPriceExchange,
+          percentage_diffr: data,
+          timestamp: Date.now(),
+          smallQuantity,
+        })
+      );
     }
   };
 }

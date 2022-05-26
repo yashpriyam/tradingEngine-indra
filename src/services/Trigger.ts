@@ -130,7 +130,7 @@ class Trigger {
       let askPriceExchange = "",
         bidPriceExchange = "";
 
-      if (orderbookExchangeData.bidPrice > updatedExchangeData.askPrice) {
+      if (orderbookExchangeData.bidPrice && updatedExchangeData.askPrice && (orderbookExchangeData.bidPrice < updatedExchangeData.askPrice)) {
         askPriceExchange = exchangeName;
         bidPriceExchange = exchangeNameKey;
 
@@ -147,7 +147,7 @@ class Trigger {
         );
       }
 
-      if (updatedExchangeData.bidPrice > orderbookExchangeData.askPrice) {
+      if (updatedExchangeData.bidPrice && orderbookExchangeData.askPrice && (updatedExchangeData.bidPrice > orderbookExchangeData.askPrice)) {
         askPriceExchange = exchangeNameKey;
         bidPriceExchange = exchangeName;
 
@@ -246,7 +246,7 @@ class Trigger {
     const { valid, data } = checkCondition(askPrice, bidPrice);
 
     if (valid) {
-      const forkedProcess = fork(`${__dirname}/callApi.js`);
+      const forkedProcess = fork(`${__dirname}/callApi.ts`);
 
       forkedProcess.send({
         // method: singleAction.excuteAction.toString(),

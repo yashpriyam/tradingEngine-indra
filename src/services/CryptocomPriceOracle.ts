@@ -39,7 +39,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
     tradePairsList.data &&
       tradePairsList.data.result &&
       tradePairsList.data.result.data.forEach((symbolObj: any) => {
-        if (symbolObj.v > 5000000) {
+        if (symbolObj.v > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)) {
           tradePairs.push(symbolObj.i);
         }
       });

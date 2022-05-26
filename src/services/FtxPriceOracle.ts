@@ -27,7 +27,7 @@ export default class FtxPriceOracle extends PriceOracle {
     const commonTradePairMap = {};
 
     exchangeInfo.data.result.forEach((symbolObj: any) => {
-      if (symbolObj.volumeUsd24h > 5000000) {
+      if (symbolObj.volumeUsd24h > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)) {
         tradePairs.push(symbolObj.name);
       }
     });

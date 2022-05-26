@@ -35,7 +35,7 @@ export default class BinancePriceOracle extends PriceOracle {
     );
 
     tradePairsList.data.forEach((symbolObj: any) => {
-      if (symbolObj.volume > 5000000) {
+      if (symbolObj.volume > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)) {
         tradePairs.push(symbolObj.symbol.toLowerCase());
       }
     });

@@ -15,7 +15,7 @@ function checkForArbitrage(
   percentage_diffr = parseFloat(percentage_diffr.toPrecision(8));
 
   return {
-    valid: percentage_diffr >= 1,
+    valid: percentage_diffr >= Number(process.env.ARBITRAGE_THRESHOLD_PERCENTAGE),
     data: percentage_diffr,
   };
 }

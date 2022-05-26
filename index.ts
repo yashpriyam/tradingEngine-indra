@@ -6,30 +6,10 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import CryptocomPriceOracle from "./src/services/CryptocomPriceOracle";
 import FtxPriceOracle from "./src/services/FtxPriceOracle";
 import Trigger from "./src/services/Trigger";
-import { fork } from "child_process";
+require("dotenv").config();
 
 const LogAction = new Action(console.log);
-console.log({ logger });
-
 // const logzLoggerAction = new Action(logger.log);
-
-// const forkedProcess = fork(`${__dirname}/src/services/callApi.js`);
-
-// forkedProcess.send({
-//   exchangeName: "binance",
-// });
-
-// forkedProcess.on("message", async (message: any) => {
-//   console.log({
-//     binaceInstance: JSON.parse(message.binancePriceOracleInstance),
-//     otherFunction: message.stringFunction,
-//   });
-
-//   let { stringFunction } = message;
-//   let asyncFn = new Function("return " + stringFunction)();
-//   let data = await asyncFn();
-//   console.log({ data });
-// });
 
 /**
  * create an instance for arbitrage trigger to trigger the orderbook data
@@ -41,7 +21,6 @@ class ArbitrageTrigger extends Trigger {
   allTradePairsExchangeMap: { [key: string]: any }; // all trade pairs from all exchanges, in exchange format
   /*
   {
-    exchangeName: [eth_btc, eth_btc, eth_btc],
     exchangeName: {eth_btc: ETHBTC, eth_btc: ETHBTC},
   }
   */
@@ -49,10 +28,7 @@ class ArbitrageTrigger extends Trigger {
   /*
     -> commonSymbolMap:
     {
-      'SYMBOL_IN_EXCHANGE_FORMAT': 'commonSymbol',
       eth_btc: ETHBTC
-      eth/btc: ETHBTC
-      ETH_BTC: ETHBTC
     }:
   */
   orderBookPriceMap: {};
@@ -63,26 +39,7 @@ class ArbitrageTrigger extends Trigger {
           exchangeName: {askPrice, bidPrice, exchangeSymbol},
           exchangeName: {askPrice, bidPrice, exchangeSymbol},
         },
-        commonSymbol: {
-          exchangeName: {askPrice, bidPrice, exchangeSymbol},
-        },
-      }
-
-      {
-      "ETETER", -> exchangeSymbol -> 
-      "WERWERE",
-      "EWRRRER"
-    }
-  
     */
-  /*
-    Getting data from exchanges:
-    getTradePairs -> allTradePairsExchangeMap -> commonSymbolsMap -> orderBookPriceMap
-
-    Receiving ws stream updates:
-    exchangeSpecificSymbolFormat ->
-    commonSymbolsMap -> gets commonSymbol -> orderBookPriceMap: matches common symbol and updates ask price, bid price
-*/
 
   constructor() {
     super();
@@ -157,10 +114,6 @@ class ArbitrageTrigger extends Trigger {
         ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),
       ]);
     }
-
-    console.log({ allTradePairsExchangeMap: this.allTradePairsExchangeMap });
-
-    console.log({ orderBookPriceMap: this.orderBookPriceMap });
   };
 
   listenArbirageStream = () => {

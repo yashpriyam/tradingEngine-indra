@@ -127,6 +127,8 @@ class Trigger {
     const updatedExchangeData = symbolDataToUpdate[exchangeName];
 
     for (const exchangeNameKey in symbolDataToUpdate) {
+      if (exchangeName === exchangeNameKey) continue;
+
       let orderbookExchangeData = symbolDataToUpdate[exchangeNameKey];
 
       let askPriceExchange = "",
@@ -135,7 +137,7 @@ class Trigger {
       if (
         orderbookExchangeData.bidPrice &&
         updatedExchangeData.askPrice &&
-        orderbookExchangeData.bidPrice < updatedExchangeData.askPrice
+        orderbookExchangeData.bidPrice > updatedExchangeData.askPrice
       ) {
         askPriceExchange = exchangeName;
         bidPriceExchange = exchangeNameKey;
@@ -171,10 +173,7 @@ class Trigger {
           smallQuantity
         );
       } else {
-        LogzioLogger.info(
-          JSON.stringify({ updatedExchangeData, orderbookExchangeData })
-        );
-        continue;
+        console.log({ updatedExchangeData, orderbookExchangeData });
       }
     }
 

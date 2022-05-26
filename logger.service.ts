@@ -9,7 +9,6 @@
 //     // if (this.configService.get('LOGZ_IO_ON')) this.logzIoOn = this.configService.get('LOGZ_IO_ON')
 
 //     // if (this.configService.get('INDRAX_STAGE')) this.stage = this.configService.get('INDRAX_STAGE')
-    
 
 //       this.logzLogger = require('logzio-nodejs').createLogger({
 //         token: 'dvXbXJJuNXRivJRhktWxTktEnwsyHcJz',
@@ -21,9 +20,7 @@
 //   }
 
 //   info(message: string) {
-    
 
-    
 //       var payload = {
 //         env: this.stage,
 //         level: "info",
@@ -31,13 +28,11 @@
 //         message: message
 //       }
 //       this.logzLogger.log(payload)
-    
+
 //   }
 
 //   warn(message: string) {
-    
-    
-    
+
 //       var payload = {
 //         env: this.stage,
 //         level: "warn",
@@ -45,13 +40,11 @@
 //         message: message
 //       }
 //       this.logzLogger.log(payload)
-    
+
 //   }
 
 //   debug(message: string) {
-    
-    
-    
+
 //       var payload = {
 //         env: this.stage,
 //         level: "debug",
@@ -59,12 +52,11 @@
 //         message: message
 //       }
 //       this.logzLogger.log(payload)
-    
+
 //   }
 
 //   error(message: string) {
-    
-        
+
 //       var payload = {
 //         env: this.stage,
 //         level: "error",
@@ -72,6 +64,6 @@
 //         message: message
 //       }
 //       this.logzLogger.log(payload)
-    
+
 //   }
 // }

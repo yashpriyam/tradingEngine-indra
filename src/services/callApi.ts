@@ -1,11 +1,13 @@
 // import BinancePriceOracle from "./BinancePriceOracle";
 
 import { allActions } from "../..";
+import { dummyTradeApiCall } from "../lib/dummyServerApiCall";
 
 /**
  * child process execution code
  */
-process.on("message", (message: any) => {
+process.on("message", async (message: any) => {
+  // console.log({ message });
   // const binancePriceOracleInstance = new BinancePriceOracle();
 
   // let stringFunction = binancePriceOracleInstance.getTradePairsList.toString();
@@ -18,20 +20,12 @@ process.on("message", (message: any) => {
   // });
   // console.log({ message });
 
-  const { data, method } = message;
+  const { data } = message;
 
-  new Function("return " + method)()();
+  // allActions.forEach((singleAction) => {
+  //   singleAction.excuteAction(data);
+  // });
 
-  allActions.forEach((singleAction) => {
-    singleAction.excuteAction(data);
-  });
-
+  await dummyTradeApiCall(data);
   process.exit();
 });
-
-/* 
-  const executionAction = new Function("return " + method)();
-
-  executionAction();
-
-*/

@@ -4,9 +4,8 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import CryptocomPriceOracle from "./src/services/CryptocomPriceOracle";
 import FtxPriceOracle from "./src/services/FtxPriceOracle";
 import Trigger from "./src/services/Trigger";
-import { LogAction, DummyServerApiCallAction } from './src/services/AllActions'
+import { LogAction, DummyServerApiCallAction } from "./src/services/AllActions";
 require("dotenv").config();
-
 
 /**
  * create an instance for arbitrage trigger to trigger the orderbook data
@@ -85,6 +84,7 @@ class ArbitrageTrigger extends Trigger {
           },
         };
       });
+
       this.allTradePairsExchangeMap[exchangeKey] = { ...this.commonSymbolMap };
     }
     // console.log({ comm: this.commonSymbolMap });

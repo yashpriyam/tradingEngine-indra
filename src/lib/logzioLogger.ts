@@ -12,11 +12,12 @@ class LogIoLoggerService {
     // this.token = process.env.logzToken;
 
     this.logzLogger = require("logzio-nodejs").createLogger({
-      token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",
+      // token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",
+      token: "uUTJKmQOqcfLXsaXXWTmzWyKvejoWxqU",
       protocol: "https",
-      host: "listener-ca.logz.io",
+      host: "listener.logz.io",
       port: "8071",
-      type: "IndraXAPI",
+      type: "elasticsearch",
     });
   }
 

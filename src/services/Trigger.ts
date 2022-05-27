@@ -37,12 +37,7 @@ class Trigger {
         }) => {
           let { asks, bids, symbol, data } = params;
 
-          LogzioLogger.info(JSON.stringify(params));
-
-          // console.log({
-          //   params,
-          //   exchangeName,
-          // });
+          // LogzioLogger.info(JSON.stringify(params));
 
           // asks and bids may be empty or undefined
           if (
@@ -52,11 +47,6 @@ class Trigger {
             bids.length === 0
           )
             return;
-
-          // console.log({
-          //   params,
-          //   exchangeName,
-          // });
 
           if (exchangeName === "binance") {
             if (!priceOracleInstance.checkOrderBookData(data)) return;
@@ -71,7 +61,9 @@ class Trigger {
 
           // get a key value pair whose quantity is lesser
           const smallQuantity =
-            askQuantity >= bidQuantity ? { askQuantity } : { bidQuantity };
+            askQuantity >= bidQuantity
+              ? { quantityKey: "ask", value: askQuantity }
+              : { quantityKey: "bid", value: bidQuantity };
 
           // New logic: for updating orderBookPriceMap from ws data stream
           // orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
@@ -89,7 +81,9 @@ class Trigger {
               exchangeSymbol: symbol,
             };
 
-            // logger.log({ orderBookPriceMap: this.orderBookPriceMap });
+            // console.log({
+            //   orderBookPriceMap: orderBookPriceMap[commonSymbolMap[symbol]],
+            // });
 
             this.orderbookDataArbitrage(
               orderBookPriceMap,
@@ -252,27 +246,26 @@ class Trigger {
     bidPrice: number,
     symbol: string,
     checkCondition: Function,
-    smallQuantity: number
+    smallQuantity: any
   ) => {
     const { valid, data } = checkCondition(askPrice, bidPrice);
 
     if (valid) {
-      const forkedProcess = fork(`${__dirname}/callApi.ts`);
+      const forkedProcess = fork(`${__dirname}/callApi.js`);
+      // const forkedProcess = fork(`./callApi.ts`);
 
       forkedProcess.send({
         // method: singleAction.excuteAction.toString(),
-        method: function hello() {
-          // console.log("hello");
-        }.toString(),
-
         data: {
-          symbol,
+          tradePair: symbol,
           askPriceExchange,
           bidPriceExchange,
           message: "Percentage differnce is greater than 1.0",
           percentage_diffr: data,
           timestamp: Date.now(),
-          smallQuantity,
+          quantity: smallQuantity.value,
+          askPrice,
+          bidPrice,
         },
       });
     } else {

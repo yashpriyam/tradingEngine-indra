@@ -114,7 +114,7 @@ class ArbitrageTrigger extends Trigger {
     );
   };
 
-  listenArbirageStream = () => {
+  listenArbitrageStream = () => {
     this.listenStream(
       this.priceOracleInstances,
       this.orderBookPriceMap,
@@ -133,5 +133,5 @@ export const allActions = [
 (async () => {
   let arbitrageTriggerInstance = new ArbitrageTrigger();
   await arbitrageTriggerInstance.getAllTradePairs();
-  arbitrageTriggerInstance.listenArbirageStream();
+  arbitrageTriggerInstance.listenArbitrageStream();
 })();

@@ -26,6 +26,12 @@ npm install
 Logz.io is an end-to-end cloud monitoring service built for scale. 
 It’s the best-of-breed open source monitoring tools on a fully managed cloud service.
 
+### installation
+```
+npm install logzio-nodejs
+
+```
+
 ### Setup
 
 To send logs on logz.io, we need to create an account on https://logz.io and get the token.

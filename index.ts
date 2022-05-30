@@ -80,6 +80,8 @@ class ArbitrageTrigger extends Trigger {
           [exchangeKey]: {
             askPrice: "",
             bidPrice: "",
+            askQuantity: "",
+            bidQuantity: "",
             exchangeSymbol: tradePair,
           },
         };
@@ -116,7 +118,6 @@ class ArbitrageTrigger extends Trigger {
       this.priceOracleInstances,
       this.orderBookPriceMap,
       this.commonSymbolMap,
-      [LogAction],
       checkForArbitrage
     );
   };

@@ -13,7 +13,6 @@ class Trigger {
     priceOraclesInstances: any[],
     orderBookPriceMap: { [key: string]: {} },
     commonSymbolMap: Map<string, string>,
-    actions: Action[],
     checkCondition: Function
   ) {
     for (let priceOracleInstance of priceOraclesInstances) {
@@ -37,7 +36,11 @@ class Trigger {
         }) => {
           let { asks, bids, symbol, data } = params;
 
-          // LogzioLogger.info(JSON.stringify(params));
+          LogzioLogger.info(JSON.stringify(params), {
+            exchangeName,
+            symbol,
+            commonSymbol: commonSymbolMap[symbol],
+          });
 
           // asks and bids may be empty or undefined
           if (
@@ -55,15 +58,8 @@ class Trigger {
           const askPrice = asks[0][0]; // lowest of asks
           const askQuantity = asks[0][1];
 
-          const bidPrice = bids[0][0];
-          // const bidPrice = bids[bids.length - 1][0]; // lowest of bids
+          const bidPrice = bids[0][0]; // highest of bids
           const bidQuantity = bids[0][1];
-
-          // get a key value pair whose quantity is lesser
-          const smallQuantity =
-            askQuantity >= bidQuantity
-              ? { quantityKey: "ask", value: askQuantity }
-              : { quantityKey: "bid", value: bidQuantity };
 
           // New logic: for updating orderBookPriceMap from ws data stream
           // orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
@@ -78,17 +74,13 @@ class Trigger {
             orderBookPriceMap[commonSymbolMap[symbol]][exchangeName] = {
               askPrice,
               bidPrice,
+              askQuantity,
+              bidQuantity,
               exchangeSymbol: symbol,
             };
 
-            // console.log({
-            //   orderBookPriceMap: orderBookPriceMap[commonSymbolMap[symbol]],
-            // });
-
             this.orderbookDataArbitrage(
               orderBookPriceMap,
-              smallQuantity,
-              actions,
               checkCondition,
               commonSymbolMap[symbol],
               exchangeName
@@ -108,12 +100,12 @@ class Trigger {
    */
   orderbookDataArbitrage(
     orderBookPriceMap: orderBookMap,
-    smallQuantity: any,
-    actions: any[],
     checkCondition: Function,
     commonSymbolKey: string,
     exchangeName: string
   ) {
+    let smallQuantity;
+
     // Efficient approach
     const symbolDataToUpdate = orderBookPriceMap[commonSymbolKey];
 
@@ -136,7 +128,13 @@ class Trigger {
         askPriceExchange = exchangeName;
         bidPriceExchange = exchangeNameKey;
 
-        // TODO -  for getting small quantity we need to think again,
+        let bidQuantity = orderbookExchangeData.bidQuantity;
+        let askQuantity = updatedExchangeData.askQuantity;
+
+        smallQuantity =
+          askQuantity <= bidQuantity
+            ? { quantityKey: "ask", value: askQuantity }
+            : { quantityKey: "bid", value: bidQuantity };
 
         this.logArbitrageMessage(
           askPriceExchange,
@@ -156,6 +154,14 @@ class Trigger {
       ) {
         askPriceExchange = exchangeNameKey;
         bidPriceExchange = exchangeName;
+
+        let bidQuantity = updatedExchangeData.bidQuantity;
+        let askQuantity = orderbookExchangeData.askQuantity;
+
+        smallQuantity =
+          askQuantity <= bidQuantity
+            ? { quantityKey: "ask", value: askQuantity }
+            : { quantityKey: "bid", value: bidQuantity };
 
         this.logArbitrageMessage(
           askPriceExchange,

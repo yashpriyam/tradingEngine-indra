@@ -3,6 +3,12 @@ import axios from "axios";
 
 export const dummyTradeApiCall = async (data: any) => {
   //   console.log({ data });
+
+  const url =
+    process.env.NODE_ENV === "dev"
+      ? process.env.DEV_SERVER_URL
+      : process.env.PROD_SERVER_URL;
+
   try {
     const {
       tradePair,
@@ -23,10 +29,7 @@ export const dummyTradeApiCall = async (data: any) => {
       tradeValue: askPrice * quantity,
     };
 
-    const purchaseResponse = await axios.post(
-      `${process.env.DUMMY_SERVER_URL}/purchase`,
-      purchaseData
-    );
+    const purchaseResponse = await axios.post(`${url}/purchase`, purchaseData);
 
     console.log({ purchaseResponseData: purchaseResponse.data });
 
@@ -43,10 +46,7 @@ export const dummyTradeApiCall = async (data: any) => {
       tradeValue: bidPrice * quantity,
     };
 
-    const sellResponse = await axios.post(
-      `${process.env.DUMMY_SERVER_URL}/sell`,
-      sellData
-    );
+    const sellResponse = await axios.post(`${url}/sell`, sellData);
 
     console.log({ sellResponseData: sellResponse.data });
   } catch (error) {

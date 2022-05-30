@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": ["dom", "esnext.asynciterable", "es2017"],
+    "typeRoots": ["src/@types"],
+    "outDir": "build",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "suppressImplicitAnyIndexErrors": true
+  }
+}

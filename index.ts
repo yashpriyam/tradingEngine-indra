@@ -9,6 +9,7 @@ import {
   DummyServerApiCallAction,
   LogzLoggerAction,
 } from "./src/services/AllActions";
+import { LogzioLogger } from "./src/lib/logzioLogger";
 require("dotenv").config();
 
 /**
@@ -95,6 +96,22 @@ class ArbitrageTrigger extends Trigger {
         ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),
       ]);
     }
+
+    LogzioLogger.info(
+      JSON.stringify({
+        allTradePairsExchangeMap: this.allTradePairsExchangeMap,
+      })
+    );
+
+    LogzioLogger.info(
+      JSON.stringify({
+        orderBookPriceMap: this.orderBookPriceMap,
+      })
+    );
+
+    LogzioLogger.info(
+      JSON.stringify({ commonSymbolMap: this.commonSymbolMap })
+    );
   };
 
   listenArbirageStream = () => {

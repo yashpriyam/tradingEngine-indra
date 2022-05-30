@@ -1,4 +1,5 @@
 import axios from "axios";
+import { LogzioLogger } from "../lib/logzioLogger";
 import PriceOracle from "./PriceOracle";
 
 export default class CryptocomPriceOracle extends PriceOracle {
@@ -36,8 +37,11 @@ export default class CryptocomPriceOracle extends PriceOracle {
         }
       });
 
-    this.tradePairsList = [...tradePairs];
-    return this.tradePairsList;
+    LogzioLogger.info(JSON.stringify({ tradePairs }), {
+      exchangeName: this.exchangeName,
+    });
+
+    return (this.tradePairsList = [...tradePairs]);
   };
 
   /**

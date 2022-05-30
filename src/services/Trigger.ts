@@ -6,6 +6,10 @@ class Trigger {
    * Iterate over all price oracles instance and call the methods on every class instance
    * It calls a setHandler method to create a map of method and callback to handle messages for
    * different exchanges
+   * @param priceOraclesInstances array of instance of different exhchanges
+   * @param orderBookPriceMap object for storing ask and bid price
+   * @param commonSymbolMap mapping for exchange symbol to common symbol
+   * @param checkCondition arbitrage condition
    * @returns void
    */
   async listenStream(
@@ -18,10 +22,11 @@ class Trigger {
       const socketClient = priceOracleInstance;
       const exchangeName = priceOracleInstance.exchangeName;
 
+      // subscribe to websocket stream of all trade pair's orderbook channel for every exchange
       await socketClient.subscribeOrderBookDataForAllTradePairs();
 
       /**
-       * this handler handles the message for orderbook data, it create a object map
+       * this handler handles the message for orderbook data, it create a orderbookpricemap
        * to store the ask and bid price for every exchange for every symbol.
        * We pass that map to a function to find the arbitrage opportunities
        */
@@ -50,6 +55,7 @@ class Trigger {
           )
             return;
 
+          // manage local orderbook for binance exchange
           if (exchangeName === "binance") {
             if (!priceOracleInstance.checkOrderBookData(data)) return;
           }
@@ -60,11 +66,13 @@ class Trigger {
           const bidPrice = bids[0][0]; // highest of bids
           const bidQuantity = bids[0][1];
 
+          // getting previous value of ask and bid
           let previousAskPrice =
               orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].askPrice,
             previousBidPrice =
               orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].bidPrice;
 
+          // store new ask and bid price only if one of them is different from previous value
           if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
             orderBookPriceMap[commonSymbolMap[symbol]][exchangeName] = {
               askPrice,
@@ -101,13 +109,15 @@ class Trigger {
     commonSymbolKey: string,
     exchangeName: string
   ) {
+    // small quantity is the minimum quantity of the bid and ask
     let smallQuantity;
 
     const symbolDataToUpdate = orderBookPriceMap[commonSymbolKey];
 
-    // this will be an object of { askPrice, bidPrice }
+    // this will be an object of { askPrice, bidPrice, askQuantity, bidQuantity }
     const updatedExchangeData = symbolDataToUpdate[exchangeName];
 
+    // compare ask and bid price of updated exchange to all other exchange
     for (const exchangeNameKey in symbolDataToUpdate) {
       if (exchangeName === exchangeNameKey) continue;
 
@@ -116,6 +126,7 @@ class Trigger {
       let askPriceExchange = "",
         bidPriceExchange = "";
 
+      // check arbitrage only if bid and ask is not empyty and bid price is greater than ask price
       if (
         orderbookExchangeData.bidPrice &&
         updatedExchangeData.askPrice &&
@@ -127,6 +138,7 @@ class Trigger {
         let bidQuantity = orderbookExchangeData.bidQuantity;
         let askQuantity = updatedExchangeData.askQuantity;
 
+        // getting minimum quantity between ask and bid
         smallQuantity =
           askQuantity <= bidQuantity
             ? { quantityKey: "ask", value: askQuantity }
@@ -143,6 +155,7 @@ class Trigger {
         );
       }
 
+      // check arbitrage only if bid and ask is not empyty and bid price is greater than ask price
       if (
         updatedExchangeData.bidPrice &&
         orderbookExchangeData.askPrice &&
@@ -154,6 +167,7 @@ class Trigger {
         let bidQuantity = updatedExchangeData.bidQuantity;
         let askQuantity = orderbookExchangeData.askQuantity;
 
+        // getting minimum quantity between ask and bid
         smallQuantity =
           askQuantity <= bidQuantity
             ? { quantityKey: "ask", value: askQuantity }
@@ -176,6 +190,18 @@ class Trigger {
     }
   }
 
+  /**
+   * This method check if arbitrage condition is valid or not.
+   * If arbitrage occur then create child process otherwise just log a detailed message
+   * on logz.io
+   * @param askPriceExchange exchange name of ask
+   * @param bidPriceExchange exchange name of bid
+   * @param askPrice
+   * @param bidPrice
+   * @param symbol
+   * @param checkCondition arbitrage condition
+   * @param smallQuantity minimum quantity between ask and bid
+   */
   logArbitrageMessage = (
     askPriceExchange: string,
     bidPriceExchange: string,
@@ -187,9 +213,12 @@ class Trigger {
   ) => {
     const { valid, data } = checkCondition(askPrice, bidPrice);
 
+    // if arbitrage occur then create a child process and pass the data in child process to execute actions
     if (valid) {
+      // creating a child process by passing the path of child process's file into fork method
       const forkedProcess = fork(`${__dirname}/callApi.js`);
 
+      // passing data to child process to execute actions
       forkedProcess.send({
         data: {
           tradePair: symbol,

@@ -4,38 +4,25 @@ import checkForArbitrage from "./src/services/checkArbitrage";
 import CryptocomPriceOracle from "./src/services/CryptocomPriceOracle";
 import FtxPriceOracle from "./src/services/FtxPriceOracle";
 import Trigger from "./src/services/Trigger";
-import { LogAction, DummyServerApiCallAction } from "./src/services/AllActions";
+import {
+  LogAction,
+  DummyServerApiCallAction,
+  LogzLoggerAction,
+} from "./src/services/AllActions";
+import { LogzioLogger } from "./src/lib/logzioLogger";
 require("dotenv").config();
 
 /**
  * create an instance for arbitrage trigger to trigger the orderbook data
  * for different exchange
  */
-
 class ArbitrageTrigger extends Trigger {
   priceOracleInstances: any[];
   allTradePairsExchangeMap: { [key: string]: any }; // all trade pairs from all exchanges, in exchange format
-  /*
-  {
-    exchangeName: {eth_btc: ETHBTC, eth_btc: ETHBTC},
-  }
-  */
+
   commonSymbolMap: Map<string, string>;
-  /*
-    -> commonSymbolMap:
-    {
-      eth_btc: ETHBTC
-    }:
-  */
+
   orderBookPriceMap: {};
-  /*
-    -> orderBookPriceMap======
-      {
-        commonSymbol: {
-          exchangeName: {askPrice, bidPrice, exchangeSymbol},
-          exchangeName: {askPrice, bidPrice, exchangeSymbol},
-        },
-    */
 
   constructor() {
     super();
@@ -65,7 +52,6 @@ class ArbitrageTrigger extends Trigger {
 
   createCommonSymbolMap = () => {
     const commonSymbolFreq = {};
-    // const commonSymbolWithFreq1 = {}
 
     for (let exchangeKey in this.allTradePairsExchangeMap) {
       let tradePairsForExchange: string[] =
@@ -80,6 +66,8 @@ class ArbitrageTrigger extends Trigger {
           [exchangeKey]: {
             askPrice: "",
             bidPrice: "",
+            askQuantity: "",
+            bidQuantity: "",
             exchangeSymbol: tradePair,
           },
         };
@@ -87,7 +75,6 @@ class ArbitrageTrigger extends Trigger {
 
       this.allTradePairsExchangeMap[exchangeKey] = { ...this.commonSymbolMap };
     }
-    // console.log({ comm: this.commonSymbolMap });
 
     // get rid of all commonSymbols with value 1 in commonSymbolFreq
     for (const [key, value] of Object.entries(commonSymbolFreq)) {
@@ -109,6 +96,22 @@ class ArbitrageTrigger extends Trigger {
         ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),
       ]);
     }
+
+    LogzioLogger.info(
+      JSON.stringify({
+        allTradePairsExchangeMap: this.allTradePairsExchangeMap,
+      })
+    );
+
+    LogzioLogger.info(
+      JSON.stringify({
+        orderBookPriceMap: this.orderBookPriceMap,
+      })
+    );
+
+    LogzioLogger.info(
+      JSON.stringify({ commonSymbolMap: this.commonSymbolMap })
+    );
   };
 
   listenArbirageStream = () => {
@@ -116,13 +119,16 @@ class ArbitrageTrigger extends Trigger {
       this.priceOracleInstances,
       this.orderBookPriceMap,
       this.commonSymbolMap,
-      [LogAction],
       checkForArbitrage
     );
   };
 }
 
-export const allActions = [DummyServerApiCallAction];
+export const allActions = [
+  LogAction,
+  LogzLoggerAction,
+  // DummyServerApiCallActions
+];
 
 (async () => {
   let arbitrageTriggerInstance = new ArbitrageTrigger();

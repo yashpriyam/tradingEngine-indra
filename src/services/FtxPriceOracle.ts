@@ -1,4 +1,5 @@
 import axios from "axios";
+import { LogzioLogger } from "../lib/logzioLogger";
 import PriceOracle from "./PriceOracle";
 
 export default class FtxPriceOracle extends PriceOracle {
@@ -12,7 +13,7 @@ export default class FtxPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://ftx.com/ws/";
     this.FtxWsInstance = this._createSocket(this.wsUrl);
-    this.tradePairsList = ["BTC/USDT", "ETH/BTC"];
+    this.tradePairsList = [];
     this.exchangeName = "ftx";
     this.orderbookhandlerMethod = "orderbook";
   }
@@ -24,21 +25,25 @@ export default class FtxPriceOracle extends PriceOracle {
   getTradePairsList = async () => {
     let exchangeInfo = await axios.get("https://ftx.com/api/markets");
     let tradePairs: any = [];
-    const commonTradePairMap = {};
 
     exchangeInfo.data.result.forEach((symbolObj: any) => {
-      if (symbolObj.volumeUsd24h > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)) {
+      if (
+        symbolObj.volumeUsd24h > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)
+      ) {
         tradePairs.push(symbolObj.name);
       }
     });
 
-    this.tradePairsList = [...tradePairs]
-    return this.tradePairsList;
+    LogzioLogger.info(JSON.stringify({ tradePairs }), {
+      exchangeName: this.exchangeName,
+    });
+
+    return (this.tradePairsList = [...tradePairs]);
   };
 
   updateTradePairsList = (tradePairsArray: string[]) => {
-    this.tradePairsList = [...tradePairsArray]
-  }
+    this.tradePairsList = [...tradePairsArray];
+  };
 
   /**
    * subscribe to orderbook stream of ftx exchange

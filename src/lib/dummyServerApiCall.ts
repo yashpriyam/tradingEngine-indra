@@ -2,7 +2,11 @@ import { LogzioLogger } from "./logzioLogger";
 import axios from "axios";
 
 export const dummyTradeApiCall = async (data: any) => {
-  //   console.log({ data });
+  const url =
+    process.env.NODE_ENV === "dev"
+      ? process.env.DEV_SERVER_URL
+      : process.env.PROD_SERVER_URL;
+
   try {
     const {
       tradePair,
@@ -23,12 +27,13 @@ export const dummyTradeApiCall = async (data: any) => {
       tradeValue: askPrice * quantity,
     };
 
-    const purchaseResponse = await axios.post(
-      `${process.env.DUMMY_SERVER_URL}/purchase`,
-      purchaseData
-    );
+    LogzioLogger.info(JSON.stringify(purchaseData));
 
-    console.log({ purchaseResponseData: purchaseResponse.data });
+    const purchaseResponse = await axios.post(`${url}/purchase`, purchaseData);
+
+    LogzioLogger.info(
+      JSON.stringify({ purchaseResponseData: purchaseResponse.data })
+    );
 
     if (purchaseResponse.data.message !== "Purchased successfully") {
       return;
@@ -43,14 +48,12 @@ export const dummyTradeApiCall = async (data: any) => {
       tradeValue: bidPrice * quantity,
     };
 
-    const sellResponse = await axios.post(
-      `${process.env.DUMMY_SERVER_URL}/sell`,
-      sellData
-    );
+    LogzioLogger.info(JSON.stringify(sellData));
 
-    console.log({ sellResponseData: sellResponse.data });
+    const sellResponse = await axios.post(`${url}/sell`, sellData);
+
+    LogzioLogger.info(JSON.stringify({ sellResponseData: sellResponse.data }));
   } catch (error) {
-    console.error({ error });
     LogzioLogger.error("Error occured during purchase or selling");
   }
 };

@@ -5,14 +5,7 @@ class LogIoLoggerService {
   logzLogger: any;
   token: string | undefined;
   constructor() {
-    // if (this.configService.get('LOG_LEVEL')) this.loggerLevel = this.configService.get('LOG_LEVEL')
-    // if (this.configService.get('LOGZ_IO_ON')) this.logzIoOn = this.configService.get('LOGZ_IO_ON')
-    // if (this.configService.get('INDRAX_STAGE')) this.stage = this.configService.get('INDRAX_STAGE')
-
-    // this.token = process.env.logzToken;
-
     this.logzLogger = require("logzio-nodejs").createLogger({
-      // token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",
       token: "uUTJKmQOqcfLXsaXXWTmzWyKvejoWxqU",
       protocol: "https",
       host: "listener.logz.io",

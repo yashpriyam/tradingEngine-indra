@@ -119,7 +119,7 @@ class PriceOracle {
               });
             });
         } else {
-          // LogzioLogger.log({ message });
+          LogzioLogger.info(message);
         }
       } catch (error) {
         LogzioLogger.error(`Parse message failed ${error}`);

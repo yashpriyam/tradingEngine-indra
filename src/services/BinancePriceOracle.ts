@@ -1,8 +1,6 @@
 import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
-// import { zb } from "ccxt.pro";
 import PriceOracle from "./PriceOracle";
-// import fetch from "node-fetch";
 
 export default class BinancePriceOracle extends PriceOracle {
   binanceWsInstance: {};
@@ -17,7 +15,7 @@ export default class BinancePriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.binance.com:9443/ws";
     this.binanceWsInstance = this._createSocket(this.wsUrl);
-    this.tradePairsList = ["btcusdt", "ethbtc"];
+    this.tradePairsList = [];
     this.exchangeName = "binance";
     this.orderbookhandlerMethod = "depthUpdate";
     this.lastUpdateIdMap = {};
@@ -100,7 +98,6 @@ export default class BinancePriceOracle extends PriceOracle {
     }
 
     // each new event's U should be equal to the previous event's u+1.
-
     if (U !== this.previousValueOfu + 1) return false;
 
     this.previousValueOfu = u;

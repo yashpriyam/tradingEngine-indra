@@ -1,4 +1,3 @@
-import Action from "./Action";
 import { fork } from "child_process";
 import { LogzioLogger } from "../lib/logzioLogger";
 
@@ -61,10 +60,6 @@ class Trigger {
           const bidPrice = bids[0][0]; // highest of bids
           const bidQuantity = bids[0][1];
 
-          // New logic: for updating orderBookPriceMap from ws data stream
-          // orderBookPriceMap[symbolMap[data]][exchangeName].askPrice
-          // orderBookPriceMap[symbolMap[data]][exchangeName].bidPrice
-
           let previousAskPrice =
               orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].askPrice,
             previousBidPrice =
@@ -95,7 +90,9 @@ class Trigger {
    * iterate over orderbookPriceMap for checking Arbitrage opportunites
    * by comparing the askPrice and bidPrice for differnet exchange for a trade pair
    * @param orderBookPriceMap
-   * @param smallQuantity a key-value pair of smallest quantity between asks or bids
+   * @param checkCondition
+   * @param commonSymbolKey
+   * @param exchangeName
    * @returns void
    */
   orderbookDataArbitrage(
@@ -106,7 +103,6 @@ class Trigger {
   ) {
     let smallQuantity;
 
-    // Efficient approach
     const symbolDataToUpdate = orderBookPriceMap[commonSymbolKey];
 
     // this will be an object of { askPrice, bidPrice }
@@ -173,76 +169,11 @@ class Trigger {
           smallQuantity
         );
       } else {
-        console.log({ updatedExchangeData, orderbookExchangeData });
+        LogzioLogger.info(
+          JSON.stringify({ updatedExchangeData, orderbookExchangeData })
+        );
       }
     }
-
-    /* for (const symbol in orderBookPriceMap) {
-      for (const askPriceExchangeKey in orderBookPriceMap[symbol]) {
-        let askPrice: number =
-          orderBookPriceMap[symbol][askPriceExchangeKey].askPrice;
-
-        for (const bidPriceExchangeKey in orderBookPriceMap[symbol]) {
-          if (askPriceExchangeKey === bidPriceExchangeKey) continue;
-
-          let bidPrice: number =
-            orderBookPriceMap[symbol][bidPriceExchangeKey].bidPrice;
-
-          const { valid, data } = checkCondition(askPrice, bidPrice);
-
-          if (bidPrice >= askPrice) {
-            if (valid) {
-              // actions.forEach((singleAction) => {
-              const forkedProcess = fork(`${__dirname}/callApi.js`);
-
-              forkedProcess.send({
-                // method: singleAction.excuteAction.toString(),
-
-                method: function hello() {
-                  // something
-                }.toString(),
-
-                data: {
-                  symbol,
-                  askPriceExchange: askPriceExchangeKey,
-                  bidPriceExchange: bidPriceExchangeKey,
-                  message: "Percentage differnce is greater than 1.0",
-                  percentage_diffr: data,
-                  timestamp: Date.now(),
-                  smallQuantity,
-                },
-              });
-
-              // singleAction.excuteAction({
-              //   symbol,
-              //   askPriceExchange: askPriceExchangeKey,
-              //   bidPriceExchange: bidPriceExchangeKey,
-              //   message: "Percentage differnce is greater than 1.0",
-              //   percentage_diffr: data,
-              //   timestamp: Date.now(),
-              //   smallQuantity,
-              // });
-              // });
-            } else {
-              console.log({
-                message: "Pecentage differnce is less than 1.0",
-                symbol,
-                askPriceExchange: askPriceExchangeKey,
-                bidPriceExchange: bidPriceExchangeKey,
-                percentage_diffr: data,
-                timestamp: Date.now(),
-                smallQuantity,
-              });
-            }
-          } else {
-            console.log("bidPrice is lower than askPrice", {
-              askPrice,
-              bidPrice,
-            });
-          }
-        }
-      }
-    } */
   }
 
   logArbitrageMessage = (
@@ -258,10 +189,8 @@ class Trigger {
 
     if (valid) {
       const forkedProcess = fork(`${__dirname}/callApi.js`);
-      // const forkedProcess = fork(`./callApi.ts`);
 
       forkedProcess.send({
-        // method: singleAction.excuteAction.toString(),
         data: {
           tradePair: symbol,
           askPriceExchange,

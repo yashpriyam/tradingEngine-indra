@@ -12,8 +12,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
     super();
     this.wsUrl = "wss://stream.crypto.com/v2/market";
     this.CryptocomWsInstance = this._createSocket(this.wsUrl);
-    // this.tradePairsList = [];
-    this.tradePairsList = ["BTC_USDT", "ETH_BTC"];
+    this.tradePairsList = [];
     this.exchangeName = "cryptocom";
     this.orderbookhandlerMethod = "book";
   }
@@ -23,14 +22,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
    * @returns void
    */
   getTradePairsList = async () => {
-    /* 
-      we can use this api to get symbols and volume both
-     https://api.crypto.com/v2/public/get-ticker
-    */
-    // let exchangeInfo = await axios.get("https://api.crypto.com/v1/symbols");
-
     let tradePairs: any = [];
-    const commonTradePairMap = {};
 
     let tradePairsList = await axios.get(
       "https://api.crypto.com/v2/public/get-ticker"
@@ -44,8 +36,8 @@ export default class CryptocomPriceOracle extends PriceOracle {
         }
       });
 
-    this.tradePairsList = [...tradePairs]
-    return this.tradePairsList
+    this.tradePairsList = [...tradePairs];
+    return this.tradePairsList;
   };
 
   /**
@@ -69,8 +61,8 @@ export default class CryptocomPriceOracle extends PriceOracle {
   };
 
   updateTradePairsList = (tradePairsArray: string[]) => {
-    this.tradePairsList = [...tradePairsArray]
-  }
+    this.tradePairsList = [...tradePairsArray];
+  };
 
   /**
    * call the base class method "getMessageStream" for

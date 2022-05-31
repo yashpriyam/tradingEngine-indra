@@ -216,7 +216,7 @@ class Trigger {
     // if arbitrage occur then create a child process and pass the data in child process to execute actions
     if (valid) {
       // creating a child process by passing the path of child process's file into fork method
-      const forkedProcess = fork(`${__dirname}/callApi.js`);
+      const forkedProcess = fork(`${__dirname}/callApi.ts`);
 
       // passing data to child process to execute actions
       forkedProcess.send({

@@ -11,7 +11,7 @@ process.on("message", async (message: any) => {
     singleAction.excuteAction(data);
   });
 
-  await tradeExecuterInstance.executeTrade(data);
+  await tradeExecuterInstance.tradeAction(data);
 
   process.exit();
 });

@@ -1,5 +1,11 @@
 # kuber_trading_engine_nodejs
 
+
+## Deployment Steps
+
+https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04
+
+
 ## Project Setup
 
 Follow these given steps to set up and run this project on your local machine:

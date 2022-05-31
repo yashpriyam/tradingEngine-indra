@@ -98,4 +98,20 @@ We use these class methods to log any type of message in our application.
 
 `Recipients` : Provide an email or endpoint on which we want to receive the report.
 
+## Steps to create visualisation for Trade pairs per exchange.
+
+- Navigate to Visualisation tab given below the discover tab in logs menu
+- Add field to the index on which we need to add visualisation
+- On visualisation page, click on create visualisation
+- Choose the visualisation type.
+- For Trade pair per exchange, we chose “Vertical Bar”
+- After choosing visualisation type, we need to setup the metrics and buckets.
+    - **Metric aggregations** are used to calculate a value for each bucket.
+    - **Bucket aggregations** groups documents together in one bucket according to your logic and requirements.
+- For Trade pair per exchange,
+    - we chose “MAX” metrics aggregator and symbolCount as a field value.
+    - In bucket aggregator, we configure X-axis by choosing aggregator as term, exchange Name as a field.
+    We also create a sub aggregator to split series. For that we chose the aggregator as term and add symbolCount as Field.
+    For sub aggregator, we choose the size = 1.
+
 

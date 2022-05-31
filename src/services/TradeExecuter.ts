@@ -2,7 +2,7 @@ import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
 
 class TradeExecuter {
-  async executeTrade(tradeData: any) {
+  async tradeAction(tradeData: any) {
     const url =
       process.env.NODE_ENV === "dev"
         ? process.env.DEV_SERVER_URL

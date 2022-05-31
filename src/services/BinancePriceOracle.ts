@@ -40,6 +40,7 @@ export default class BinancePriceOracle extends PriceOracle {
     });
 
     LogzioLogger.info(JSON.stringify({ tradePairs }), {
+      symbolCount: tradePairs.length,
       exchangeName: this.exchangeName,
     });
 

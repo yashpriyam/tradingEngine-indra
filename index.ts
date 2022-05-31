@@ -126,7 +126,7 @@ class ArbitrageTrigger extends Trigger {
 
 export const allActions = [
   LogAction,
-  // LogzLoggerAction,
+  LogzLoggerAction,
   // DummyServerApiCallActions
 ];
 

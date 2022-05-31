@@ -14,7 +14,7 @@ class LogIoLoggerService {
     });
   }
 
-  info(message: string, key?: object) {
+  info(message: string | any, key?: object) {
     const payload = {
       ...key,
       env: this.stage,

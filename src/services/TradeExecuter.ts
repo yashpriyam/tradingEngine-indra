@@ -53,13 +53,23 @@ class TradeExecuter {
         })
       );
 
-      this.randomMessageExecuter();
+      this.randomMessageExecuter(
+        askPriceExchange,
+        bidPriceExchange,
+        tradePair,
+        percentage_diffr
+      );
     } catch (error) {
       LogzioLogger.error("Error occured during purchase or selling");
     }
   }
 
-  randomMessageExecuter() {
+  randomMessageExecuter(
+    askPriceExchange: string,
+    bidPriceExchange: string,
+    symbol: string,
+    percentage_diffr: number
+  ) {
     const messages = [
       "Executed arbitrage opportunity successfully",
       "Missed arbitrage opportunity",
@@ -69,7 +79,26 @@ class TradeExecuter {
 
     if (randomIndex === messages.length) randomIndex = randomIndex - 1;
 
-    LogzioLogger.info(JSON.stringify({ message: messages[randomIndex] }));
+    let statusOfArbitrage;
+
+    randomIndex === 0
+      ? (statusOfArbitrage = "executed")
+      : (statusOfArbitrage = "missed");
+
+    // console.log({
+    //   message: messages[randomIndex],
+    //   statusOfArbitrage,
+    // });
+
+    // console.log({ LogzioLogger: LogzioLogger.info });
+
+    LogzioLogger.info(JSON.stringify({ message: messages[randomIndex] }), {
+      statusOfArbitrage,
+      askPriceExchange,
+      bidPriceExchange,
+      symbol,
+      percentage_diffr,
+    });
   }
 }
 

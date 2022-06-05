@@ -1,5 +1,6 @@
 import { fork } from "child_process";
 import { LogzioLogger } from "../lib/logzioLogger";
+import { tradeExecuterInstance } from "./TradeExecuter";
 
 class Trigger {
   /**
@@ -211,12 +212,44 @@ class Trigger {
     checkCondition: Function,
     smallQuantity: any
   ) => {
-    const { valid, data } = checkCondition(askPrice, bidPrice);
+    const { valid, data: percentage_diffr } = checkCondition(
+      askPrice,
+      bidPrice
+    );
 
     // if arbitrage occur then create a child process and pass the data in child process to execute actions
     if (valid) {
       // creating a child process by passing the path of child process's file into fork method
-      const forkedProcess = fork(`${__dirname}/callApi.ts`);
+      const forkedProcess = fork(`${__dirname}/callApi.js`);
+
+      // arbitrage opporunity
+      LogzioLogger.info(
+        JSON.stringify({
+          tradePair: symbol,
+          askPriceExchange,
+          bidPriceExchange,
+          message: "Percentage differnce is greater than 1.0",
+          percentage_diffr,
+          timestamp: Date.now(),
+          quantity: smallQuantity.value,
+          askPrice,
+          bidPrice,
+        }),
+        {
+          symbol,
+          askPriceExchange,
+          bidPriceExchange,
+          arbitrage: true,
+          percentage_diffr,
+        }
+      );
+
+      tradeExecuterInstance.randomMessageExecuter(
+        askPriceExchange,
+        bidPriceExchange,
+        symbol,
+        percentage_diffr
+      );
 
       // passing data to child process to execute actions
       forkedProcess.send({
@@ -225,7 +258,7 @@ class Trigger {
           askPriceExchange,
           bidPriceExchange,
           message: "Percentage differnce is greater than 1.0",
-          percentage_diffr: data,
+          percentage_diffr,
           timestamp: Date.now(),
           quantity: smallQuantity.value,
           askPrice,
@@ -239,7 +272,7 @@ class Trigger {
           symbol,
           askPriceExchange,
           bidPriceExchange,
-          percentage_diffr: data,
+          percentage_diffr,
           timestamp: Date.now(),
           smallQuantity,
         })

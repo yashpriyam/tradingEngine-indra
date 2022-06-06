@@ -94,8 +94,17 @@ class TradeExecuter {
 
     LogzioLogger.info(JSON.stringify({ message: messages[randomIndex] }), {
       statusOfArbitrage,
-      askPriceExchange,
+      exchangeName: askPriceExchange,
+      exchangeTradeKey: "ask",
       bidPriceExchange,
+      symbol,
+      percentage_diffr,
+    });
+
+    LogzioLogger.info(JSON.stringify({ message: messages[randomIndex] }), {
+      statusOfArbitrage,
+      exchangeName: bidPriceExchange,
+      exchangeTradeKey: "bid",
       symbol,
       percentage_diffr,
     });

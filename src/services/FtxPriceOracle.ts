@@ -2,6 +2,8 @@ import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
 import PriceOracle from "./PriceOracle";
 
+const sendOneTimeData = process.argv.slice(2)[0];
+
 export default class FtxPriceOracle extends PriceOracle {
   FtxWsInstance: {};
   wsUrl: string;
@@ -34,10 +36,11 @@ export default class FtxPriceOracle extends PriceOracle {
       }
     });
 
-    LogzioLogger.info(JSON.stringify({ tradePairs }), {
-      symbolCount: tradePairs.length,
-      exchangeName: this.exchangeName,
-    });
+    if (sendOneTimeData)
+      LogzioLogger.info(JSON.stringify({ tradePairs }), {
+        symbolCount: tradePairs.length,
+        exchangeName: this.exchangeName,
+      });
 
     return (this.tradePairsList = [...tradePairs]);
   };

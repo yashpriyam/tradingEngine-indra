@@ -13,6 +13,9 @@ import { LogzioLogger } from "./src/lib/logzioLogger";
 import Action from "./src/services/Action";
 require("dotenv").config();
 
+//  ONE_TIME_DATA
+const sendOneTimeData = process.argv.slice(2)[0];
+
 /**
  * create an instance for arbitrage trigger to trigger the orderbook data
  * for different exchange
@@ -85,22 +88,16 @@ class ArbitrageTrigger extends Trigger {
           Object.values(this.orderBookPriceMap[key])[0],
         ];
 
-        console.log({
-          exchangeSymbol,
-          exchangeName,
-          commonSymbol: this.commonSymbolMap[exchangeSymbol],
-          overlap: false,
-        });
-
-        LogzioLogger.info(
-          "trade pair which do not overlap with other exchange",
-          {
-            exchangeSymbol,
-            exchangeName,
-            commonSymbol: this.commonSymbolMap[exchangeSymbol],
-            overlap: false,
-          }
-        );
+        if (sendOneTimeData)
+          LogzioLogger.info(
+            "trade pair which do not overlap with other exchange",
+            {
+              exchangeSymbol,
+              exchangeName,
+              commonSymbol: this.commonSymbolMap[exchangeSymbol],
+              overlap: false,
+            }
+          );
 
         delete this.allTradePairsExchangeMap[exchangeName][exchangeSymbol];
         delete this.commonSymbolMap[exchangeSymbol];
@@ -115,15 +112,17 @@ class ArbitrageTrigger extends Trigger {
       ]);
     }
 
-    this.createCombinationForExchanges(this.orderBookPriceMap);
+    if (sendOneTimeData)
+      this.createCombinationForExchanges(this.orderBookPriceMap);
 
-    LogzioLogger.info(
-      JSON.stringify({
-        allTradePairsExchangeMap: this.allTradePairsExchangeMap,
-        orderBookPriceMap: this.orderBookPriceMap,
-        commonSymbolMap: this.commonSymbolMap,
-      })
-    );
+    if (sendOneTimeData)
+      LogzioLogger.info(
+        JSON.stringify({
+          allTradePairsExchangeMap: this.allTradePairsExchangeMap,
+          orderBookPriceMap: this.orderBookPriceMap,
+          commonSymbolMap: this.commonSymbolMap,
+        })
+      );
   };
 
   // create Combination For Exchanges having common trade pairs

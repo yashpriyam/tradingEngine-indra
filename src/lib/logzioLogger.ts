@@ -1,7 +1,7 @@
 class LogIoLoggerService {
   stage = "dev"; // from .env
   loggerLevel = "debug"; // from .env
-  loggerName = "yash-arb"; // from .env
+  loggerName = "kuber-arb-engine"; // from .env
   logzLogger: any;
   token: string | undefined;
   constructor() {

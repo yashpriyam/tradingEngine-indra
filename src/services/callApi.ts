@@ -1,5 +1,5 @@
 import { allActions } from "../..";
-import { dummyTradeApiCall } from "../lib/dummyServerApiCall";
+import { tradeExecuterInstance } from "./TradeExecuter";
 
 /**
  * child process execution code
@@ -11,6 +11,7 @@ process.on("message", async (message: any) => {
     singleAction.excuteAction(data);
   });
 
-  await dummyTradeApiCall(data);
+  await tradeExecuterInstance.tradeAction(data);
+
   process.exit();
 });

@@ -38,6 +38,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
       });
 
     LogzioLogger.info(JSON.stringify({ tradePairs }), {
+      symbolCount: tradePairs.length,
       exchangeName: this.exchangeName,
     });
 

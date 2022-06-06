@@ -10,6 +10,7 @@ import {
   LogzLoggerAction,
 } from "./src/services/AllActions";
 import { LogzioLogger } from "./src/lib/logzioLogger";
+import Action from "./src/services/Action";
 require("dotenv").config();
 
 /**
@@ -84,6 +85,23 @@ class ArbitrageTrigger extends Trigger {
           Object.values(this.orderBookPriceMap[key])[0],
         ];
 
+        console.log({
+          exchangeSymbol,
+          exchangeName,
+          commonSymbol: this.commonSymbolMap[exchangeSymbol],
+          overlap: false,
+        });
+
+        LogzioLogger.info(
+          "trade pair which do not overlap with other exchange",
+          {
+            exchangeSymbol,
+            exchangeName,
+            commonSymbol: this.commonSymbolMap[exchangeSymbol],
+            overlap: false,
+          }
+        );
+
         delete this.allTradePairsExchangeMap[exchangeName][exchangeSymbol];
         delete this.commonSymbolMap[exchangeSymbol];
         delete this.orderBookPriceMap[key];
@@ -97,21 +115,90 @@ class ArbitrageTrigger extends Trigger {
       ]);
     }
 
+    this.createCombinationForExchanges(this.orderBookPriceMap);
+
     LogzioLogger.info(
       JSON.stringify({
         allTradePairsExchangeMap: this.allTradePairsExchangeMap,
-      })
-    );
-
-    LogzioLogger.info(
-      JSON.stringify({
         orderBookPriceMap: this.orderBookPriceMap,
+        commonSymbolMap: this.commonSymbolMap,
       })
     );
+  };
 
-    LogzioLogger.info(
-      JSON.stringify({ commonSymbolMap: this.commonSymbolMap })
-    );
+  // create Combination For Exchanges having common trade pairs
+  createCombinationForExchanges = (orderBookPriceMap: object) => {
+    let exchangeCombinationCountMap: Object = {};
+
+    for (let key in orderBookPriceMap) {
+      let commonSymbol = orderBookPriceMap[key];
+
+      let exchangeArray = Object.keys(commonSymbol);
+
+      exchangeArray = exchangeArray.sort();
+
+      let combinationsOfExchange = this.generateCombinationsForArray(
+        exchangeArray,
+        2
+      );
+
+      // console.log({ combinationsOfExchange });
+
+      combinationsOfExchange.forEach((exchnageCombination) => {
+        exchangeCombinationCountMap[exchnageCombination] =
+          ++exchangeCombinationCountMap[exchnageCombination] || 1;
+      });
+    }
+
+    // LogzioLogger.info(
+    //   "count of combinations of exchanges having common trade Pairs",
+    //   {
+    //     ...exchangeCombinationCountMap,
+    //   }
+    // );
+
+    for (let key in exchangeCombinationCountMap) {
+      // console.log({
+      //   exchangeCombinationKey: key,
+      //   exchangeCombinationCount: exchangeCombinationCountMap[key],
+      // });
+
+      LogzioLogger.info(
+        "count of combinations of exchanges having common trade Pairs",
+        {
+          exchangeCombinationKey: key,
+          exchangeCombinationCount: exchangeCombinationCountMap[key],
+        }
+      );
+    }
+  };
+
+  // code for creating combinations from given array
+  generateCombinationsForArray = (array: string[], min: number) => {
+    const fn = function (
+      n: number,
+      src: string[],
+      got: string[],
+      all: string[]
+    ) {
+      if (n == 0) {
+        if (got.length > 0) {
+          all[all.length] = got.join("-");
+        }
+        return;
+      }
+      for (let j = 0; j < src.length; j++) {
+        fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
+      }
+      return;
+    };
+
+    let all: string[] = [];
+    for (let i = min; i < array.length; i++) {
+      fn(i, array, [], all);
+    }
+    all.push(array.join("-"));
+    return all;
   };
 
   listenArbitrageStream = () => {
@@ -126,12 +213,17 @@ class ArbitrageTrigger extends Trigger {
 
 export const allActions = [
   LogAction,
-  LogzLoggerAction,
+  // LogzLoggerAction,
   // DummyServerApiCallActions
 ];
 
 (async () => {
   let arbitrageTriggerInstance = new ArbitrageTrigger();
-  await arbitrageTriggerInstance.getAllTradePairs();
-  arbitrageTriggerInstance.listenArbitrageStream();
+
+  try {
+    await arbitrageTriggerInstance.getAllTradePairs();
+    arbitrageTriggerInstance.listenArbitrageStream();
+  } catch (error) {
+    LogzioLogger.error({ error });
+  }
 })();

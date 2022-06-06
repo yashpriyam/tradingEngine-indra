@@ -1,20 +1,21 @@
 class LogIoLoggerService {
   stage = "dev"; // from .env
   loggerLevel = "debug"; // from .env
-  loggerName = "indrax-api"; // from .env
+  loggerName = "kuber-arb-engine"; // from .env
   logzLogger: any;
   token: string | undefined;
   constructor() {
     this.logzLogger = require("logzio-nodejs").createLogger({
-      token: "uUTJKmQOqcfLXsaXXWTmzWyKvejoWxqU",
+      token: "dvXbXJJuNXRivJRhktWxTktEnwsyHcJz",
       protocol: "https",
-      host: "listener.logz.io",
+      host: "listener-ca.logz.io",
       port: "8071",
       type: "elasticsearch",
+      debug: true,
     });
   }
 
-  info(message: string, key?: object) {
+  info(message: string | any, key?: object) {
     const payload = {
       ...key,
       env: this.stage,

@@ -6,9 +6,20 @@ type orderBookMap = {
   };
 };
 
+type placeOrderTpye = {
+  orderType: 'Market'
+  tradeActionType: 'buy' | 'sell'
+  exchangeName: string
+  percentage_diffr: number
+  tradeQuantity: any
+  tradePair: string
+  unitPrice: number
+  tradeValue: number
+}
+
 
 interface Action {
-  execute(arg: any): void
+  execute(arg: any): any
 }
 interface PriceOracle {
   setHandler(method: string, callback: (params: any) => void): void
@@ -26,10 +37,10 @@ interface PriceOracleInstances extends PriceOracle {
   subscribeOrderBookDataForAllTradePairs(): void
 }
 interface TradeExecutor {
-  placeOrder(): Boolean
-  cancelOrder(): true
-  checkOrderStatus(): true
-  getWalletBalance(exchange: string): true
+  placeOrder(tradeData: any): Promise<any>
+  cancelOrder(): Boolean
+  checkOrderStatus(): Boolean
+  getWalletBalance(exchange: string): Boolean
 }
 interface Strategy {
   start(

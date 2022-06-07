@@ -6,9 +6,9 @@ class LogIoLoggerService {
   token: string | undefined;
   constructor() {
     this.logzLogger = require("logzio-nodejs").createLogger({
-      token: "dvXbXJJuNXRivJRhktWxTktEnwsyHcJz",
+      token: "wTMYrprFKilxYbGKaCGvUrOFOGYORNyy",
       protocol: "https",
-      host: "listener-ca.logz.io",
+      host: "listener.logz.io",
       port: "8071",
       type: "elasticsearch",
       debug: true,

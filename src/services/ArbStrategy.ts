@@ -1,6 +1,6 @@
 import { fork } from "child_process";
 import { LogzioLogger } from "../lib/logzioLogger";
-import { tradeExecuterInstance } from "./TradeExecuter";
+// import { tradeExecuterInstance } from "./TradeExecuter";
 
 /**
  * ArbStrategy class to get the orderbook data
@@ -14,7 +14,7 @@ class ArbStrategy implements Strategy {
   private instance: any
   orderBookPriceMap: {};
 
-  constructor(priceOracleInstances: any[], actions: any[]) {
+  constructor(priceOracleInstances: any[], actions: { [key: string]: any[]}) {
     this.priceOracleInstances = priceOracleInstances
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};
@@ -385,6 +385,31 @@ class ArbStrategy implements Strategy {
       // arbitrage opporunity
 
       // logs for askPriceExchange
+      LogzioLogger.info('arb-info', {
+        buyData: {
+          symbol,
+          exchangeName: askPriceExchange,
+          exchangeTradeKey: "ask",
+          percentage_diffr,
+          quantity: smallQuantity,
+          tradeValue: askPrice * smallQuantity,
+          unitPrice: askPrice,
+          arbitrage: true,
+          message: "Percentage differnce is greater than 1.0",
+        },
+        sellData: {
+          symbol,
+          exchangeName: bidPriceExchange,
+          exchangeTradeKey: "bid",
+          percentage_diffr,
+          quantity: smallQuantity,
+          tradeValue: bidPrice * smallQuantity,
+          unitPrice: bidPrice,
+          arbitrage: true,
+          message: "Percentage differnce is greater than 1.0",
+        },
+      })
+
       LogzioLogger.info(
         JSON.stringify({
           tradePair: symbol,
@@ -426,13 +451,6 @@ class ArbStrategy implements Strategy {
           arbitrage: true,
           percentage_diffr,
         }
-      );
-
-      tradeExecuterInstance.randomMessageExecuter(
-        askPriceExchange,
-        bidPriceExchange,
-        symbol,
-        percentage_diffr
       );
 
       // passing data to child process to execute actions

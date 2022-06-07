@@ -5,9 +5,7 @@ import FtxExchange from "./src/services/FtxExchange";
 import ArbStrategy from "./src/services/ArbStrategy";
 import checkForArbitrage from "./src/services/checkArbitrage";
 import {
-  LogAction,
-  DummyServerApiCallAction,
-  LogzLoggerAction,
+  ConsoleLogAction, LoggerAction, DummyArbAction
 } from "./src/services/AllActions";
 import { LogzioLogger } from "./src/lib/logzioLogger";
 require("dotenv").config();
@@ -21,11 +19,11 @@ const priceOracleInstances = [
 ]
 
 
-export const allActions = [
-  LogAction,
-  // LogzLoggerAction,
-  // DummyServerApiCallActions
-];
+export const allActions = {
+  sync: [new ConsoleLogAction, new LoggerAction],
+  async: [new DummyArbAction]
+};
+
 
 (async () => {
   try {

@@ -1,20 +1,20 @@
 import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
-import PriceOracle from "./PriceOracle";
+import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
 
-export default class FtxPriceOracle extends PriceOracle {
-  FtxWsInstance: {};
-  wsUrl: string;
+export default class FtxExchange extends BasePriceOracle implements PriceOracleInstances {
   tradePairsList: string[];
-  exchangeName: "ftx";
+  exchangeName: string;
   orderbookhandlerMethod: "orderbook";
+  private wsUrl: string;
+  private ftxWsInstance: {};
 
   constructor() {
     super();
     this.wsUrl = "wss://ftx.com/ws/";
-    this.FtxWsInstance = this._createSocket(this.wsUrl);
+    this.ftxWsInstance = this._createSocket(this.wsUrl);
     this.tradePairsList = [];
     this.exchangeName = "ftx";
     this.orderbookhandlerMethod = "orderbook";
@@ -61,7 +61,7 @@ export default class FtxPriceOracle extends PriceOracle {
         market: tradePair,
         channel: "orderbook",
       };
-      this.subscribeStream(subscriberObject, this.FtxWsInstance);
+      this.subscribeStream(subscriberObject, this.ftxWsInstance);
     }
     this.getFtxMessageStream();
   };
@@ -71,8 +71,8 @@ export default class FtxPriceOracle extends PriceOracle {
    * getting message for ftx exchange and pass a data format to it.
    * @returns void
    */
-  getFtxMessageStream = () => {
-    this.getMessageStream(this.FtxWsInstance, {
+  private getFtxMessageStream = () => {
+    this.getMessageStream(this.ftxWsInstance, {
       asks: "data.asks",
       bids: "data.bids",
       symbol: "market",

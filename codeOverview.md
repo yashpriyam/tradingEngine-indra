@@ -13,9 +13,9 @@ arbitrageTriggerInstance.listenArbitrageStream();
   constructor() {
     super();
     this.priceOracleInstances = [
-        new BinancePriceOracle(),
-        new CryptocomPriceOracle(),
-        new FtxPriceOracle(),
+        new BinanceExchange(),
+        new CryptocomExchange(),
+        new FtxExchange(),
     ];
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};

@@ -11,17 +11,19 @@ interface Action {
   execute(arg: any): void
 }
 interface PriceOracle {
-  _handlers: Map<any, any>;
-  isConnected: boolean;
-  _ws: any;
   setHandler(method: string, callback: (params: any) => void): void
-  heartBeat(): void;
-  isMultiStream(message: { stream: any }): boolean
   getMessageStream(wsInstance: any, dataFormat: any): void
   _createSocket(wsUrl: string): any
-  getPathValue(payload: { [x: string]: any }, path: string): { [x: string]: any }
   subscribeStream(subscriberObject: Object, wsInstance: any): void
+}
 
+interface PriceOracleInstances extends PriceOracle {
+  orderbookhandlerMethod: string;
+  exchangeName: string;
+  tradePairsList: string[];
+  updateTradePairsList(tradePairsArray: string[]): void
+  getTradePairsList(): Promise<any>
+  subscribeOrderBookDataForAllTradePairs(): void
 }
 interface TradeExecutor {
   placeOrder(): Boolean

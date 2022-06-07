@@ -1,8 +1,8 @@
 "use strict";
-import BinancePriceOracle from "./src/services/BinancePriceOracle";
+import BinanceExchange from "./src/services/BinanceExchange";
 import checkForArbitrage from "./src/services/checkArbitrage";
-import CryptocomPriceOracle from "./src/services/CryptocomPriceOracle";
-import FtxPriceOracle from "./src/services/FtxPriceOracle";
+import CryptocomExchange from "./src/services/CryptocomExchange";
+import FtxExchange from "./src/services/FtxExchange";
 import Trigger from "./src/services/Trigger";
 import {
   LogAction,
@@ -31,9 +31,9 @@ class ArbitrageTrigger extends Trigger {
   constructor() {
     super();
     this.priceOracleInstances = [
-      new BinancePriceOracle(),
-      new CryptocomPriceOracle(),
-      new FtxPriceOracle(),
+      new BinanceExchange(),
+      new CryptocomExchange(),
+      new FtxExchange(),
     ];
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};

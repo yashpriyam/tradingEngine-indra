@@ -1,16 +1,16 @@
 import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
-import PriceOracle from "./PriceOracle";
+import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
-export default class BinancePriceOracle extends PriceOracle {
-  binanceWsInstance: {};
-  wsUrl: string;
+export default class BinanceExchange extends BasePriceOracle implements PriceOracleInstances {
   tradePairsList: string[];
   exchangeName: "binance";
-  orderbookhandlerMethod: "depthUpdate";
-  lastUpdateIdMap: { [key: string]: number };
-  previousValueOfu: number;
+  orderbookhandlerMethod: string;
+  private wsUrl: string;
+  private lastUpdateIdMap: { [key: string]: number };
+  private previousValueOfu: number;
+  private binanceWsInstance: {};
 
   constructor() {
     super();
@@ -76,17 +76,6 @@ export default class BinancePriceOracle extends PriceOracle {
     this.getBinanceMessageStream();
   };
 
-  createLastUpdateIdMap = async (tradePair: string) => {
-    tradePair = tradePair.toUpperCase();
-
-    const depthSnapshot = await axios.get(
-      `https://api.binance.com/api/v3/depth?symbol=${tradePair}&limit=1000`
-    );
-
-    this.lastUpdateIdMap[tradePair] =
-      depthSnapshot.data && depthSnapshot.data.lastUpdateId;
-  };
-
   checkOrderBookData = (orderbookData: any): boolean => {
     const { s: symbol, a: asks, b: bids, u, U } = orderbookData;
 
@@ -117,12 +106,23 @@ export default class BinancePriceOracle extends PriceOracle {
    * getting message for binance exchange and pass a data format to it.
    * @returns void
    */
-  getBinanceMessageStream = () => {
+  private getBinanceMessageStream = () => {
     this.getMessageStream(this.binanceWsInstance, {
       asks: "a",
       bids: "b",
       symbol: "s",
       methodPath: "e",
     });
+  };
+
+  private createLastUpdateIdMap = async (tradePair: string) => {
+    tradePair = tradePair.toUpperCase();
+
+    const depthSnapshot = await axios.get(
+      `https://api.binance.com/api/v3/depth?symbol=${tradePair}&limit=1000`
+    );
+
+    this.lastUpdateIdMap[tradePair] =
+      depthSnapshot.data && depthSnapshot.data.lastUpdateId;
   };
 }

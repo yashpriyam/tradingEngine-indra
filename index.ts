@@ -4,10 +4,10 @@ import CryptocomExchange from "./src/services/CryptocomExchange";
 import FtxExchange from "./src/services/FtxExchange";
 import ArbStrategy from "./src/services/ArbStrategy";
 import checkForArbitrage from "./src/services/checkArbitrage";
+import { LogzioLogger } from "./src/lib/logzioLogger";
 import {
   ConsoleLogAction, LoggerAction, DummyArbAction
 } from "./src/services/AllActions";
-import { LogzioLogger } from "./src/lib/logzioLogger";
 require("dotenv").config();
 
 
@@ -30,6 +30,6 @@ export const allActions = {
     let arbStrategyInstance = await new ArbStrategy(priceOracleInstances, allActions);
     await arbStrategyInstance.start(checkForArbitrage);
   } catch (error) {
-    LogzioLogger.error({ error });
+    LogzioLogger.debug(error);
   }
 })();

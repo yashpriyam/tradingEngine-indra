@@ -155,7 +155,7 @@ class BasePriceOracle implements PriceOracle {
 
   /**
    * store a callback for a given method,
-   * used in Trigger class to handle every message
+   * used in ArbStrategy class to handle every message
    * @param method a key to store a callback
    * @param callback a function to execute for a message
    * @returns void

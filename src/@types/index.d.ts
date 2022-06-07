@@ -32,6 +32,7 @@ interface TradeExecutor {
   getWalletBalance(exchange: string): true
 }
 interface Strategy {
-  start(): void
-  check(): void
+  start(
+    checkCondition: Function
+  ): Promise<void>
 }

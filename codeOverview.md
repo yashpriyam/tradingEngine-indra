@@ -99,7 +99,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
 
 - this method also sanitizes the list of trade pairs which we'd then subscribe to, and then goes back to update all the data structures `allTradePairsExchangeMap`, `commonSymbolMap`, `orderBookPriceMap` with updated trade pairs list.
 
-3. `listenArbitrageStream` method is called on ArbitrageTrigger class, which then calls the `listenStream` method from Trigger base class
+3. `listenArbitrageStream` method is called on ArbitrageTrigger class, which then calls the `listenStream` method from ArbStrategy base class
 
 ```typescript
 listenArbitrageStream = () => {
@@ -112,7 +112,7 @@ listenArbitrageStream = () => {
 };
 ```
 
-- the `listenStream` method of Trigger class loops through priceOracleInstances array,
+- the `listenStream` method of ArbStrategy class loops through priceOracleInstances array,
 - calls the `subscribeOrderBookDataForAllTradePairs` method on each PriceOracle instance - this method sends a subscription request to the respective trade exchange for each of it's trade pairs, and then calls the `getMessageStream` method after all the trade pairs arre subscribed
 - `getMessageStream` method is a method on PriceOracle base class which listens to messages (price updates) from all the subscriptions through the `ws.onmessage` method of ws instances.
 - after calling the `subscribeOrderBookDataForAllTradePairs` on each PriceOracle instance,

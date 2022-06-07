@@ -52,7 +52,7 @@ export default class CryptocomExchange extends BasePriceOracle implements PriceO
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = () => {
+  subscribeOrderBookDataForAllTradePairs = async () => {
     let id = 0;
     for (const tradePair of this.tradePairsList) {
       const subscriberObject = {

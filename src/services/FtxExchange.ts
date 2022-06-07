@@ -54,7 +54,7 @@ export default class FtxExchange extends BasePriceOracle implements PriceOracleI
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = () => {
+  subscribeOrderBookDataForAllTradePairs = async () => {
     for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
         op: "subscribe",

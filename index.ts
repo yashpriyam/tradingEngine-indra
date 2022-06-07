@@ -85,12 +85,12 @@ class ArbitrageTrigger extends Trigger {
           Object.values(this.orderBookPriceMap[key])[0],
         ];
 
-        console.log({
-          exchangeSymbol,
-          exchangeName,
-          commonSymbol: this.commonSymbolMap[exchangeSymbol],
-          overlap: false,
-        });
+        // console.log({
+        //   exchangeSymbol,
+        //   exchangeName,
+        //   commonSymbol: this.commonSymbolMap[exchangeSymbol],
+        //   overlap: false,
+        // });
 
         LogzioLogger.info(
           "trade pair which do not overlap with other exchange",

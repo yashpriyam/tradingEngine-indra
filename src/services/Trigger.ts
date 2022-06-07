@@ -223,6 +223,8 @@ class Trigger {
       const forkedProcess = fork(`${__dirname}/callApi.js`);
 
       // arbitrage opporunity
+
+      // logs for askPriceExchange
       LogzioLogger.info(
         JSON.stringify({
           tradePair: symbol,
@@ -237,8 +239,30 @@ class Trigger {
         }),
         {
           symbol,
+          exchangeName: askPriceExchange,
+          exchangeTradeKey: "ask",
+          arbitrage: true,
+          percentage_diffr,
+        }
+      );
+
+      // logs for bidPriceExchange
+      LogzioLogger.info(
+        JSON.stringify({
+          tradePair: symbol,
           askPriceExchange,
           bidPriceExchange,
+          message: "Percentage differnce is greater than 1.0",
+          percentage_diffr,
+          timestamp: Date.now(),
+          quantity: smallQuantity.value,
+          askPrice,
+          bidPrice,
+        }),
+        {
+          symbol,
+          exchangeName: bidPriceExchange,
+          exchangeTradeKey: "bid",
           arbitrage: true,
           percentage_diffr,
         }

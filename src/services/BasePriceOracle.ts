@@ -74,7 +74,7 @@ class BasePriceOracle implements PriceOracle {
     };
 
     this._ws.onerror = (err: any) => {
-      LogzioLogger.debug(`web socket error : ${err}`);
+      LogzioLogger.error(`web socket error : ${err}`);
     };
 
     this.heartBeat();

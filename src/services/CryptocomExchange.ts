@@ -1,19 +1,19 @@
 import axios from "axios";
 import { LogzioLogger } from "../lib/logzioLogger";
-import PriceOracle from "./PriceOracle";
+import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
-export default class CryptocomPriceOracle extends PriceOracle {
-  CryptocomWsInstance: {};
-  wsUrl: string;
+export default class CryptocomExchange extends BasePriceOracle implements PriceOracleInstances {
   tradePairsList: string[];
-  exchangeName: "cryptocom";
+  exchangeName: string;
   orderbookhandlerMethod: "book";
+  private wsUrl: string;
+  private cryptocomWsInstance: {};
 
   constructor() {
     super();
     this.wsUrl = "wss://stream.crypto.com/v2/market";
-    this.CryptocomWsInstance = this._createSocket(this.wsUrl);
+    this.cryptocomWsInstance = this._createSocket(this.wsUrl);
     this.tradePairsList = [];
     this.exchangeName = "cryptocom";
     this.orderbookhandlerMethod = "book";
@@ -62,7 +62,7 @@ export default class CryptocomPriceOracle extends PriceOracle {
           channels: [`book.${tradePair}.20`],
         },
       };
-      this.subscribeStream(subscriberObject, this.CryptocomWsInstance);
+      this.subscribeStream(subscriberObject, this.cryptocomWsInstance);
     }
     this.getCryptocomMessageStream();
   };
@@ -76,8 +76,8 @@ export default class CryptocomPriceOracle extends PriceOracle {
    * getting message for cryptocom exchange and pass a data format to it.
    * @returns void
    */
-  getCryptocomMessageStream = () => {
-    this.getMessageStream(this.CryptocomWsInstance, {
+  private getCryptocomMessageStream = () => {
+    this.getMessageStream(this.cryptocomWsInstance, {
       asks: "result.data.[].asks",
       bids: "result.data.[].bids",
       symbol: "result.instrument_name",

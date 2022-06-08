@@ -1,5 +1,4 @@
 import { allActions } from "../..";
-import { tradeExecuterInstance } from "./TradeExecuter";
 
 /**
  * child process execution code
@@ -7,11 +6,15 @@ import { tradeExecuterInstance } from "./TradeExecuter";
 process.on("message", async (message: any) => {
   const { data } = message;
 
-  allActions.forEach((singleAction) => {
-    singleAction.excuteAction(data);
+  allActions.sync.forEach((action) => {
+    action.execute(data);
   });
 
-  await tradeExecuterInstance.tradeAction(data);
+  (async () => {
+    for (const action of allActions.async) {
+      await action.execute(data);
+    }
+  })()
 
   process.exit();
 });

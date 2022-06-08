@@ -8,14 +8,14 @@ import { LogzioLogger } from "../lib/logzioLogger";
  */
 const sendOneTimeData = process.argv.slice(2)[0];
 class ArbStrategy implements Strategy {
-  private priceOracleInstances: any[];
+  private PriceOracleExtended: any[];
   private allTradePairsExchangeMap: { [key: string]: any }; // all trade pairs from all exchanges, in exchange format
   private commonSymbolMap: Map<string, string>;
   private instance: any
   orderBookPriceMap: {};
 
-  constructor(priceOracleInstances: any[], actions: { [key: string]: any[]}) {
-    this.priceOracleInstances = priceOracleInstances
+  constructor(PriceOracleExtended: any[], actions: { [key: string]: any[]}) {
+    this.PriceOracleExtended = PriceOracleExtended
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};
     this.commonSymbolMap = new Map();
@@ -37,9 +37,10 @@ class ArbStrategy implements Strategy {
     checkCondition: Function
   ) {
 
-    for (let priceOracleInstance of this.priceOracleInstances) {
+    for (let priceOracleInstance of this.PriceOracleExtended) {
       const socketClient = priceOracleInstance;
       const exchangeName = priceOracleInstance.exchangeName;
+
 
       // subscribe to websocket stream of all trade pair's orderbook channel for every exchange
       await socketClient.subscribeOrderBookDataForAllTradePairs();
@@ -58,7 +59,12 @@ class ArbStrategy implements Strategy {
           data: string;
         }) => {
           let { asks, bids, symbol, data } = params;
-          
+          console.log({params});
+
+          if(exchangeName === "kucoin"){
+            symbol = symbol.split(":")[1];
+          }
+
           LogzioLogger.info(JSON.stringify(params), {
             exchangeName,
             symbol,
@@ -84,6 +90,8 @@ class ArbStrategy implements Strategy {
 
           const bidPrice = bids[0][0]; // highest of bids
           const bidQuantity = bids[0][1];
+
+          console.log({orderBookPriceMap: this.orderBookPriceMap})
 
           // getting previous value of ask and bid
           let previousAskPrice =
@@ -209,7 +217,7 @@ class ArbStrategy implements Strategy {
 
 
   private async getAllTradePairs (){    
-    for (const priceOracleInstance of this.priceOracleInstances) {
+    for (const priceOracleInstance of this.PriceOracleExtended) {
       this.allTradePairsExchangeMap = {
         ...this.allTradePairsExchangeMap,
         [priceOracleInstance.exchangeName]: [
@@ -272,7 +280,7 @@ class ArbStrategy implements Strategy {
       }
     }
 
-    for (const exchangeInstance of this.priceOracleInstances) {
+    for (const exchangeInstance of this.PriceOracleExtended) {
       const { exchangeName, updateTradePairsList }: any = exchangeInstance;
       updateTradePairsList([
         ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),

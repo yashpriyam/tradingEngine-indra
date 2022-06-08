@@ -28,7 +28,7 @@ interface PriceOracle {
   subscribeStream(subscriberObject: Object, wsInstance: any): void
 }
 
-interface PriceOracleInstances extends PriceOracle {
+interface PriceOracleExtended extends PriceOracle {
   orderbookhandlerMethod: string;
   exchangeName: string;
   tradePairsList: string[];

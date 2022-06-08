@@ -6,7 +6,9 @@ import ArbStrategy from "./src/services/ArbStrategy";
 import checkForArbitrage from "./src/services/checkArbitrage";
 import { LogzioLogger } from "./src/lib/logzioLogger";
 import {
-  ConsoleLogAction, LoggerAction, DummyArbAction
+  ConsoleLogAction,
+  LoggerAction,
+  DummyArbAction,
 } from "./src/services/AllActions";
 import KucoinExchange from "./src/services/KucoinExchange";
 import BitfinexExchange from "./src/services/BitfinexExchange";

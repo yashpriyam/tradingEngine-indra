@@ -12,7 +12,7 @@ class ArbStrategy implements Strategy {
   private allTradePairsExchangeMap: { [key: string]: any }; // all trade pairs from all exchanges, in exchange format
   private commonSymbolMap: Map<string, string>;
   private instance: any
-  orderBookPriceMap: {};
+  private orderBookPriceMap: {};
 
   constructor(PriceOracleExtended: any[], actions: { [key: string]: any[]}) {
     this.PriceOracleExtended = PriceOracleExtended

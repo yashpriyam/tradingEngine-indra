@@ -70,7 +70,7 @@ export default class BinanceExchange extends BasePriceOracle implements PriceOra
       try {
         await this.createLastUpdateIdMap(tradePair);
       } catch (error) {
-        LogzioLogger.debug(error);
+        LogzioLogger.error(error);
       }
     }
     this.getBinanceMessageStream();

@@ -2,10 +2,10 @@ import * as WebSocket from "ws";
 import { LogzioLogger } from "../lib/logzioLogger";
 
 /** base class to get exchange data */
-class PriceOracle {
-  _handlers: Map<any, any>;
-  isConnected: boolean;
-  _ws: any;
+class BasePriceOracle implements PriceOracle {
+  private _handlers: Map<any, any>;
+  private isConnected: boolean;
+  private _ws: any;
   constructor() {
     this._handlers = new Map();
     this.isConnected = false;
@@ -33,7 +33,7 @@ class PriceOracle {
    * @param path path of the property in payload object data
    * @returns path value from the payload
    */
-  getPathValue(payload: { [x: string]: any }, path: string) {
+  private getPathValue(payload: { [x: string]: any }, path: string) {
     const jsonpath = path.split(".");
     for (let i = 0; i < jsonpath.length; i++) {
       if (jsonpath[i] === "[]") {
@@ -95,6 +95,10 @@ class PriceOracle {
       try {
         const message = JSON.parse(msg.data);
 
+        if (dataFormat.messagePath === 'e') {
+          console.log({message});
+        }
+        
         if (this.isMultiStream(message)) {
           this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
             cb({
@@ -122,7 +126,7 @@ class PriceOracle {
           // LogzioLogger.info(message);
         }
       } catch (error) {
-        LogzioLogger.error(`Parse message failed ${error}`);
+        LogzioLogger.debug(`Parse message failed ${error}`);
       }
     };
   }
@@ -132,7 +136,7 @@ class PriceOracle {
    * @param message web socket messaage
    * @returns {boolean}
    */
-  isMultiStream(message: { stream: any }): boolean {
+  private isMultiStream(message: { stream: any }): boolean {
     return message.stream && this._handlers.has(message.stream);
   }
 
@@ -140,7 +144,7 @@ class PriceOracle {
    * Ping the web socker server every 5 seconds
    * @returns void
    */
-  heartBeat() {
+  private heartBeat() {
     setInterval(() => {
       if (this._ws.readyState === WebSocket.OPEN) {
         this._ws.ping();
@@ -151,7 +155,7 @@ class PriceOracle {
 
   /**
    * store a callback for a given method,
-   * used in Trigger class to handle every message
+   * used in ArbStrategy class to handle every message
    * @param method a key to store a callback
    * @param callback a function to execute for a message
    * @returns void
@@ -164,4 +168,4 @@ class PriceOracle {
   }
 }
 
-export default PriceOracle;
+export default BasePriceOracle;

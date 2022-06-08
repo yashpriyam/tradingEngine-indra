@@ -1,25 +1,43 @@
 import { fork } from "child_process";
 import { LogzioLogger } from "../lib/logzioLogger";
-import { tradeExecuterInstance } from "./TradeExecuter";
+// import { tradeExecuterInstance } from "./TradeExecuter";
 
-class Trigger {
+/**
+ * ArbStrategy class to get the orderbook data
+ * from different exchanges and execute actions based on checkCondition
+ */
+const sendOneTimeData = process.argv.slice(2)[0];
+class ArbStrategy implements Strategy {
+  private priceOracleInstances: any[];
+  private allTradePairsExchangeMap: { [key: string]: any }; // all trade pairs from all exchanges, in exchange format
+  private commonSymbolMap: Map<string, string>;
+  private instance: any
+  orderBookPriceMap: {};
+
+  constructor(priceOracleInstances: any[], actions: { [key: string]: any[]}) {
+    this.priceOracleInstances = priceOracleInstances
+    this.orderBookPriceMap = {};
+    this.allTradePairsExchangeMap = {};
+    this.commonSymbolMap = new Map();
+    this.instance = (async () => {      
+      await this.getAllTradePairs()
+      return this;
+    })();
+    return this.instance
+  }
+  
   /**
    * Iterate over all price oracles instance and call the methods on every class instance
    * It calls a setHandler method to create a map of method and callback to handle messages for
    * different exchanges
-   * @param priceOraclesInstances array of instance of different exhchanges
-   * @param orderBookPriceMap object for storing ask and bid price
-   * @param commonSymbolMap mapping for exchange symbol to common symbol
    * @param checkCondition arbitrage condition
    * @returns void
    */
-  async listenStream(
-    priceOraclesInstances: any[],
-    orderBookPriceMap: { [key: string]: {} },
-    commonSymbolMap: Map<string, string>,
+  async start(
     checkCondition: Function
   ) {
-    for (let priceOracleInstance of priceOraclesInstances) {
+
+    for (let priceOracleInstance of this.priceOracleInstances) {
       const socketClient = priceOracleInstance;
       const exchangeName = priceOracleInstance.exchangeName;
 
@@ -30,7 +48,7 @@ class Trigger {
        * this handler handles the message for orderbook data, it create a orderbookpricemap
        * to store the ask and bid price for every exchange for every symbol.
        * We pass that map to a function to find the arbitrage opportunities
-       */
+       */      
       socketClient.setHandler(
         socketClient.orderbookhandlerMethod,
         (params: {
@@ -40,11 +58,11 @@ class Trigger {
           data: string;
         }) => {
           let { asks, bids, symbol, data } = params;
-
+          
           LogzioLogger.info(JSON.stringify(params), {
             exchangeName,
             symbol,
-            commonSymbol: commonSymbolMap[symbol],
+            commonSymbol: this.commonSymbolMap[symbol],
           });
 
           // asks and bids may be empty or undefined
@@ -69,13 +87,13 @@ class Trigger {
 
           // getting previous value of ask and bid
           let previousAskPrice =
-              orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].askPrice,
+              this.orderBookPriceMap[this.commonSymbolMap[symbol]][exchangeName].askPrice,
             previousBidPrice =
-              orderBookPriceMap[commonSymbolMap[symbol]][exchangeName].bidPrice;
+              this.orderBookPriceMap[this.commonSymbolMap[symbol]][exchangeName].bidPrice;
 
           // store new ask and bid price only if one of them is different from previous value
           if (askPrice !== previousAskPrice || previousBidPrice !== bidPrice) {
-            orderBookPriceMap[commonSymbolMap[symbol]][exchangeName] = {
+            this.orderBookPriceMap[this.commonSymbolMap[symbol]][exchangeName] = {
               askPrice,
               bidPrice,
               askQuantity,
@@ -83,10 +101,9 @@ class Trigger {
               exchangeSymbol: symbol,
             };
 
-            this.orderbookDataArbitrage(
-              orderBookPriceMap,
+            this.check(
               checkCondition,
-              commonSymbolMap[symbol],
+              this.commonSymbolMap[symbol],
               exchangeName
             );
           }
@@ -104,8 +121,7 @@ class Trigger {
    * @param exchangeName
    * @returns void
    */
-  orderbookDataArbitrage(
-    orderBookPriceMap: orderBookMap,
+  private check(
     checkCondition: Function,
     commonSymbolKey: string,
     exchangeName: string
@@ -113,7 +129,7 @@ class Trigger {
     // small quantity is the minimum quantity of the bid and ask
     let smallQuantity;
 
-    const symbolDataToUpdate = orderBookPriceMap[commonSymbolKey];
+    const symbolDataToUpdate = this.orderBookPriceMap[commonSymbolKey];
 
     // this will be an object of { askPrice, bidPrice, askQuantity, bidQuantity }
     const updatedExchangeData = symbolDataToUpdate[exchangeName];
@@ -191,6 +207,150 @@ class Trigger {
     }
   }
 
+
+  private async getAllTradePairs (){    
+    for (const priceOracleInstance of this.priceOracleInstances) {
+      this.allTradePairsExchangeMap = {
+        ...this.allTradePairsExchangeMap,
+        [priceOracleInstance.exchangeName]: [
+          ...(await priceOracleInstance.getTradePairsList()),
+        ],
+      };
+    }
+
+    this.createCommonSymbolMap();
+  };
+
+  private createCommonSymbolMap = () => {
+    const commonSymbolFreq = {};
+
+    for (let exchangeKey in this.allTradePairsExchangeMap) {
+      let tradePairsForExchange: string[] =
+        this.allTradePairsExchangeMap[exchangeKey];
+
+      tradePairsForExchange.forEach((tradePair) => {
+        const commonSymbol = tradePair.replace(/[^a-z0-9]/gi, "").toUpperCase();
+        this.commonSymbolMap[tradePair] = commonSymbol;
+        commonSymbolFreq[commonSymbol] = ++commonSymbolFreq[commonSymbol] || 1;
+        this.orderBookPriceMap[commonSymbol] = {
+          ...this.orderBookPriceMap[commonSymbol],
+          [exchangeKey]: {
+            askPrice: "",
+            bidPrice: "",
+            askQuantity: "",
+            bidQuantity: "",
+            exchangeSymbol: tradePair,
+          },
+        };
+      });
+
+      this.allTradePairsExchangeMap[exchangeKey] = { ...this.commonSymbolMap };
+    }
+
+    // get rid of all commonSymbols with value 1 in commonSymbolFreq
+    for (const [key, value] of Object.entries(commonSymbolFreq)) {
+      if (value === 1) {
+        const [exchangeName, { exchangeSymbol }]: [string, any] = [
+          Object.keys(this.orderBookPriceMap[key])[0],
+          Object.values(this.orderBookPriceMap[key])[0],
+        ];
+
+        if (sendOneTimeData)
+          LogzioLogger.info(
+            "trade pair which do not overlap with other exchange",
+            {
+              exchangeSymbol,
+              exchangeName,
+              commonSymbol: this.commonSymbolMap[exchangeSymbol],
+              overlap: false,
+            }
+          );
+
+        delete this.allTradePairsExchangeMap[exchangeName][exchangeSymbol];
+        delete this.commonSymbolMap[exchangeSymbol];
+        delete this.orderBookPriceMap[key];
+      }
+    }
+
+    for (const exchangeInstance of this.priceOracleInstances) {
+      const { exchangeName, updateTradePairsList }: any = exchangeInstance;
+      updateTradePairsList([
+        ...Object.keys(this.allTradePairsExchangeMap[exchangeName]),
+      ]);
+    }
+
+    if (sendOneTimeData)
+      this.createCombinationForExchanges(this.orderBookPriceMap);
+
+    if (sendOneTimeData)
+      LogzioLogger.info(
+        JSON.stringify({
+          allTradePairsExchangeMap: this.allTradePairsExchangeMap,
+          orderBookPriceMap: this.orderBookPriceMap,
+          commonSymbolMap: this.commonSymbolMap,
+        })
+      );
+  };
+
+  private createCombinationForExchanges = (orderBookPriceMap: object) => {
+    let exchangeCombinationCountMap: Object = {};
+
+    for (let key in orderBookPriceMap) {
+      let commonSymbol = orderBookPriceMap[key];
+
+      let exchangeArray = Object.keys(commonSymbol);
+
+      exchangeArray = exchangeArray.sort();
+
+      let combinationsOfExchange = this.generateCombinationsForArray(
+        exchangeArray,
+        2
+      );
+
+      combinationsOfExchange.forEach((exchnageCombination) => {
+        exchangeCombinationCountMap[exchnageCombination] =
+          ++exchangeCombinationCountMap[exchnageCombination] || 1;
+      });
+    }
+
+    for (let key in exchangeCombinationCountMap) {
+      LogzioLogger.info(
+        "count of combinations of exchanges having common trade Pairs",
+        {
+          exchangeCombinationKey: key,
+          exchangeCombinationCount: exchangeCombinationCountMap[key],
+        }
+      );
+    }
+  };
+
+  private generateCombinationsForArray = (array: string[], min: number) => {
+    const fn = function (
+      n: number,
+      src: string[],
+      got: string[],
+      all: string[]
+    ) {
+      if (n == 0) {
+        if (got.length > 0) {
+          all[all.length] = got.join("-");
+        }
+        return;
+      }
+      for (let j = 0; j < src.length; j++) {
+        fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
+      }
+      return;
+    };
+
+    let all: string[] = [];
+    for (let i = min; i < array.length; i++) {
+      fn(i, array, [], all);
+    }
+    all.push(array.join("-"));
+    return all;
+  };
+
   /**
    * This method check if arbitrage condition is valid or not.
    * If arbitrage occur then create child process otherwise just log a detailed message
@@ -203,7 +363,7 @@ class Trigger {
    * @param checkCondition arbitrage condition
    * @param smallQuantity minimum quantity between ask and bid
    */
-  logArbitrageMessage = (
+  private logArbitrageMessage = (
     askPriceExchange: string,
     bidPriceExchange: string,
     askPrice: number,
@@ -225,6 +385,31 @@ class Trigger {
       // arbitrage opporunity
 
       // logs for askPriceExchange
+      LogzioLogger.info('arb-info', {
+        buyData: {
+          symbol,
+          exchangeName: askPriceExchange,
+          exchangeTradeKey: "ask",
+          percentage_diffr,
+          quantity: smallQuantity,
+          tradeValue: askPrice * smallQuantity,
+          unitPrice: askPrice,
+          arbitrage: true,
+          message: "Percentage differnce is greater than 1.0",
+        },
+        sellData: {
+          symbol,
+          exchangeName: bidPriceExchange,
+          exchangeTradeKey: "bid",
+          percentage_diffr,
+          quantity: smallQuantity,
+          tradeValue: bidPrice * smallQuantity,
+          unitPrice: bidPrice,
+          arbitrage: true,
+          message: "Percentage differnce is greater than 1.0",
+        },
+      })
+
       LogzioLogger.info(
         JSON.stringify({
           tradePair: symbol,
@@ -268,13 +453,6 @@ class Trigger {
         }
       );
 
-      tradeExecuterInstance.randomMessageExecuter(
-        askPriceExchange,
-        bidPriceExchange,
-        symbol,
-        percentage_diffr
-      );
-
       // passing data to child process to execute actions
       forkedProcess.send({
         data: {
@@ -305,4 +483,4 @@ class Trigger {
   };
 }
 
-export default Trigger;
+export default ArbStrategy;

@@ -6,7 +6,9 @@ import ArbStrategy from "./src/services/ArbStrategy";
 import checkForArbitrage from "./src/services/checkArbitrage";
 import { LogzioLogger } from "./src/lib/logzioLogger";
 import {
-  ConsoleLogAction, LoggerAction, DummyArbAction
+  ConsoleLogAction,
+  LoggerAction,
+  DummyArbAction,
 } from "./src/services/AllActions";
 require("dotenv").config();
 
@@ -30,6 +32,6 @@ export const allActions = {
     let arbStrategyInstance = await new ArbStrategy(priceOracleInstances, allActions);
     await arbStrategyInstance.start(checkForArbitrage);
   } catch (error) {
-    LogzioLogger.debug(error);
+    LogzioLogger.error(error);
   }
 })();

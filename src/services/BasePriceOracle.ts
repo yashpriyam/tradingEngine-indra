@@ -1,5 +1,6 @@
 import * as WebSocket from "ws";
 import { LogzioLogger } from "../lib/logzioLogger";
+import { checksum } from "./bifinexchecksum";
 const CRC = require('crc-32')
 
 const BOOK: any = {}
@@ -103,36 +104,38 @@ class BasePriceOracle implements PriceOracle {
         const message = JSON.parse(msg.data);
         // console.log({message})
 
-        if (dataFormat.messagePath === 'e') {
-          console.log({message});
-        }
+        checksum(message);
+
+        // if (dataFormat.messagePath === 'e') {
+        //   console.log({message});
+        // }
         
-        if (this.isMultiStream(message)) {
-          this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
-            cb({
-              asks: this.getPathValue(message, dataFormat.asks),
-              bids: this.getPathValue(message, dataFormat.bids),
-              symbol: this.getPathValue(message, dataFormat.symbol),
-              data: message,
-            })
-          );
-        } else if (
-          this.getPathValue(message, dataFormat.methodPath) &&
-          this._handlers.has(this.getPathValue(message, dataFormat.methodPath))
-        ) {
-          this._handlers
-            .get(this.getPathValue(message, dataFormat.methodPath))
-            .forEach((cb: (arg0: any) => void) => {
-              cb({
-                asks: this.getPathValue(message, dataFormat.asks),
-                bids: this.getPathValue(message, dataFormat.bids),
-                symbol: this.getPathValue(message, dataFormat.symbol),
-                data: message,
-              });
-            });
-        } else {
-          // LogzioLogger.info(message);
-        }
+        // if (this.isMultiStream(message)) {
+        //   this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
+        //     cb({
+        //       asks: this.getPathValue(message, dataFormat.asks),
+        //       bids: this.getPathValue(message, dataFormat.bids),
+        //       symbol: this.getPathValue(message, dataFormat.symbol),
+        //       data: message,
+        //     })
+        //   );
+        // } else if (
+        //   this.getPathValue(message, dataFormat.methodPath) &&
+        //   this._handlers.has(this.getPathValue(message, dataFormat.methodPath))
+        // ) {
+        //   this._handlers
+        //     .get(this.getPathValue(message, dataFormat.methodPath))
+        //     .forEach((cb: (arg0: any) => void) => {
+        //       cb({
+        //         asks: this.getPathValue(message, dataFormat.asks),
+        //         bids: this.getPathValue(message, dataFormat.bids),
+        //         symbol: this.getPathValue(message, dataFormat.symbol),
+        //         data: message,
+        //       });
+        //     });
+        // } else {
+        //   // LogzioLogger.info(message);
+        // }
       } catch (error) {
         console.log({error})
         LogzioLogger.debug(`Parse message failed ${error}`);

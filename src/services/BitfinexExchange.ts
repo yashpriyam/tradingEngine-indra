@@ -94,7 +94,7 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
     //https://gist.github.com/brentkirkland/b75f76c6bda90ce874e7f6eddeff5d26 (need to implement this)
 
     this.getMessageStream(this.bitfinexWsInstance, {
-      checksum: true
+      // checksum: true
     });
   };
 

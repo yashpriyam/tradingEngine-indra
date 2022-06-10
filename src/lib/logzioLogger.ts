@@ -23,6 +23,7 @@ class LogIoLoggerService {
       source: this.loggerName,
       message: message,
     };
+    console.log({info: payload})
     this.logzLogger.log(payload);
   }
 
@@ -33,6 +34,7 @@ class LogIoLoggerService {
       source: this.loggerName,
       message: message,
     };
+    console.log({warn: payload})
     this.logzLogger.log(payload);
   }
 
@@ -43,6 +45,7 @@ class LogIoLoggerService {
       source: this.loggerName,
       message: message,
     };
+    console.log({debug: payload})
     this.logzLogger.log(payload);
   }
 
@@ -53,6 +56,7 @@ class LogIoLoggerService {
       source: this.loggerName,
       message: message,
     };
+    console.log({error: payload})
     this.logzLogger.log(payload);
   }
 }

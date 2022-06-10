@@ -71,7 +71,6 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
    * @returns void
    */
   subscribeOrderBookDataForAllTradePairs = async () => {   
-    this.subscribeStream({ event: 'conf', flags: 131072 }, this.bitfinexWsInstance);
 
     for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
@@ -79,6 +78,7 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
         channel: 'book', 
         symbol: tradePair 
       };
+      // this.subscribeStream({ event: 'conf', flags: 131072 }, this.bitfinexWsInstance);
       this.subscribeStream(subscriberObject, this.bitfinexWsInstance);
     }
     this.getBitfinexMessageStream();

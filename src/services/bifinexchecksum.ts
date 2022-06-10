@@ -9,44 +9,47 @@ BOOK.mcnt = 0
 
 
 export function checksum(msg: any){
-  if(msg.length !== 3) return;
+  // if(msg.length !== 3) return;
 
   if (msg.event) return
 
   if (msg[1] === 'hb') return
 
   // if msg contains checksum, perform checksum
-  // if (msg[1] === 'cs') {
-  //   const checksum = msg[2]
-  //   const csdata = []
-  //   const bidsKeys = BOOK.psnap['bids']
-  //   const asksKeys = BOOK.psnap['asks']
+  if (msg[1] === 'cs') {
+    const checksum = msg[2]
+    const csdata = []
+    const bidsKeys = BOOK.psnap['bids']
+    const asksKeys = BOOK.psnap['asks']
 
-  //   // collect all bids and asks into an array
-  //   for (let i = 0; i < 25; i++) {
-  //     if (bidsKeys[i]) {
-  //       const price = bidsKeys[i]
-  //       const pp = BOOK.bids[price]
-  //       csdata.push(pp.price, pp.amount)
-  //     }
-  //     if (asksKeys[i]) {
-  //       const price = asksKeys[i]
-  //       const pp = BOOK.asks[price]
-  //       csdata.push(pp.price, -pp.amount)
-  //     }
-  //   }
+    if(!bidsKeys || !asksKeys) return 
+    // collect all bids and asks into an array
+    for (let i = 0; i < 25; i++) {
+      if (bidsKeys[i]) {
+        const price = bidsKeys[i]
+        const pp = BOOK.bids[price]
+        csdata.push(pp.price, pp.amount)
+      }
+      if (asksKeys[i]) {
+        const price = asksKeys[i]
+        const pp = BOOK.asks[price]
+        csdata.push(pp.price, -pp.amount)
+      }
+    }
 
-  //   // create string of array to compare with checksum
-  //   const csStr = csdata.join(':')
-  //   const csCalc = CRC.str(csStr)
-  //   if (csCalc !== checksum) {
-  //     console.error('CHECKSUM FAILED')
-  //     process.exit(-1)
-  //   } else {
-  //     console.log('Checksum: ' + checksum + ' success!')
-  //   }
-  //   return
-  // }
+    console.log({csdata})
+
+    // create string of array to compare with checksum
+    const csStr = csdata.join(':')
+    const csCalc = CRC.str(csStr)
+    if (csCalc !== checksum) {
+      console.error('CHECKSUM FAILED')
+      process.exit(-1)
+    } else {
+      console.log('Checksum: ' + checksum + ' success!')
+    }
+    return
+  }
 
   // handle book. create book or update/delete price points
   if (BOOK.mcnt === 0) {
@@ -103,6 +106,6 @@ export function checksum(msg: any){
     })
   }
   BOOK.mcnt++
-  console.log({BOOK})
+  // console.log({BOOK})
 }
 

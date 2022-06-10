@@ -17,11 +17,11 @@ require("dotenv").config();
 
 
 const PriceOracleExtended = [
-  // new BinanceExchange,
-  // new CryptocomExchange,
-  // new FtxExchange,
-  // new KucoinExchange,
-  new BitfinexExchange
+  new BinanceExchange,
+  new CryptocomExchange,
+  new FtxExchange,
+  new KucoinExchange,
+  // new BitfinexExchange
 ]
 
 

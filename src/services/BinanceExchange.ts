@@ -40,6 +40,8 @@ export default class BinanceExchange extends BasePriceOracle implements PriceOra
       }
     });
 
+    tradePairs = tradePairs.slice(0,10);
+
     if (sendOneTimeData)
       LogzioLogger.info(JSON.stringify({ tradePairs }), {
         symbolCount: tradePairs.length,

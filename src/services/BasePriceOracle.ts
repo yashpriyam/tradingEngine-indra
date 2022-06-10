@@ -77,7 +77,7 @@ class BasePriceOracle implements PriceOracle {
     });
 
     this._ws.onclose = () => {
-      LogzioLogger.warn("ws closed");
+      LogzioLogger.warn(`ws closed for ${wsUrl}`);
     };
 
     this._ws.onerror = (err: any) => {
@@ -102,40 +102,40 @@ class BasePriceOracle implements PriceOracle {
     wsInstance.onmessage = (msg: { data: string }) => {
       try {
         const message = JSON.parse(msg.data);
-        // console.log({message})
-
-        checksum(message);
+        console.log({message})
+        
+        // checksum(message);
 
         // if (dataFormat.messagePath === 'e') {
         //   console.log({message});
         // }
         
-        // if (this.isMultiStream(message)) {
-        //   this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
-        //     cb({
-        //       asks: this.getPathValue(message, dataFormat.asks),
-        //       bids: this.getPathValue(message, dataFormat.bids),
-        //       symbol: this.getPathValue(message, dataFormat.symbol),
-        //       data: message,
-        //     })
-        //   );
-        // } else if (
-        //   this.getPathValue(message, dataFormat.methodPath) &&
-        //   this._handlers.has(this.getPathValue(message, dataFormat.methodPath))
-        // ) {
-        //   this._handlers
-        //     .get(this.getPathValue(message, dataFormat.methodPath))
-        //     .forEach((cb: (arg0: any) => void) => {
-        //       cb({
-        //         asks: this.getPathValue(message, dataFormat.asks),
-        //         bids: this.getPathValue(message, dataFormat.bids),
-        //         symbol: this.getPathValue(message, dataFormat.symbol),
-        //         data: message,
-        //       });
-        //     });
-        // } else {
-        //   // LogzioLogger.info(message);
-        // }
+        if (this.isMultiStream(message)) {
+          this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
+            cb({
+              asks: this.getPathValue(message, dataFormat.asks),
+              bids: this.getPathValue(message, dataFormat.bids),
+              symbol: this.getPathValue(message, dataFormat.symbol),
+              data: message,
+            })
+          );
+        } else if (
+          this.getPathValue(message, dataFormat.methodPath) &&
+          this._handlers.has(this.getPathValue(message, dataFormat.methodPath))
+        ) {
+          this._handlers
+            .get(this.getPathValue(message, dataFormat.methodPath))
+            .forEach((cb: (arg0: any) => void) => {
+              cb({
+                asks: this.getPathValue(message, dataFormat.asks),
+                bids: this.getPathValue(message, dataFormat.bids),
+                symbol: this.getPathValue(message, dataFormat.symbol),
+                data: message,
+              });
+            });
+        } else {
+          // LogzioLogger.info(message);
+        }
       } catch (error) {
         console.log({error})
         LogzioLogger.debug(`Parse message failed ${error}`);

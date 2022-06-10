@@ -38,7 +38,7 @@ class LogIoLoggerService {
     this.logzLogger.log(payload);
   }
 
-  debug(message: string) {
+  debug(message: string | any) {
     const payload = {
       env: this.stage,
       level: "debug",

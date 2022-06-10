@@ -3,7 +3,7 @@ import { LogzioLogger } from "../lib/logzioLogger";
 import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
-export default class CryptocomExchange extends BasePriceOracle implements PriceOracleInstances {
+export default class CryptocomExchange extends BasePriceOracle implements PriceOracleExtended {
   tradePairsList: string[];
   exchangeName: string;
   orderbookhandlerMethod: "book";

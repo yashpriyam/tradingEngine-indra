@@ -3,7 +3,7 @@ import { LogzioLogger } from "../lib/logzioLogger";
 import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
-export default class BinanceExchange extends BasePriceOracle implements PriceOracleInstances {
+export default class BinanceExchange extends BasePriceOracle implements PriceOracleExtended {
   tradePairsList: string[];
   exchangeName: "binance";
   orderbookhandlerMethod: string;
@@ -39,6 +39,8 @@ export default class BinanceExchange extends BasePriceOracle implements PriceOra
         tradePairs.push(symbolObj.symbol.toLowerCase());
       }
     });
+
+    tradePairs = tradePairs.slice(0,10);
 
     if (sendOneTimeData)
       LogzioLogger.info(JSON.stringify({ tradePairs }), {

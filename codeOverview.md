@@ -12,7 +12,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
   ```typescript
   constructor() {
     super();
-    this.priceOracleInstances = [
+    this.PriceOracleExtended = [
         new BinanceExchange(),
         new CryptocomExchange(),
         new FtxExchange(),
@@ -22,7 +22,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
     this.commonSymbolMap = new Map();
   }
   ```
-- the `priceOracleInstances` is an array of PriceOracle class instances of all the exchanges
+- the `PriceOracleExtended` is an array of PriceOracle class instances of all the exchanges
 - the `orderBookPriceMap` is nested object which gets updated on recieving data from ws streams of any exchanges
 - it looks like this:
 
@@ -85,7 +85,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
 
 2. `getAllTradePairs` method of this instance is called
 
-- this method first creates the `allTradePairsExchangeMap` by calling the `getTradePairsList` method on each PriceOracle instance from `priceOracleInstances`.
+- this method first creates the `allTradePairsExchangeMap` by calling the `getTradePairsList` method on each PriceOracle instance from `PriceOracleExtended`.
 - then it calls the `createCommonSymbolMap` method of ArbitrageTrigger class
 - the `createCommonSymbolMap` method creates the `commonSymbolMap` and also the initial strucutre of `orderBookPriceMap`
 - it then updates the `allTradePairsExchangeMap` where now the each exchange has an object as value with mapping of it's trade pairs to their standard format, which looks like this:
@@ -104,7 +104,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
 ```typescript
 listenArbitrageStream = () => {
   this.listenStream(
-    this.priceOracleInstances,
+    this.PriceOracleExtended,
     this.orderBookPriceMap,
     this.commonSymbolMap,
     checkForArbitrage // this is the function which recieves the ask and bid prices and check for %age difference, controlled by ARBITRAGE_THRESHOLD_PERCENTAGE env variable
@@ -112,7 +112,7 @@ listenArbitrageStream = () => {
 };
 ```
 
-- the `listenStream` method of ArbStrategy class loops through priceOracleInstances array,
+- the `listenStream` method of ArbStrategy class loops through PriceOracleExtended array,
 - calls the `subscribeOrderBookDataForAllTradePairs` method on each PriceOracle instance - this method sends a subscription request to the respective trade exchange for each of it's trade pairs, and then calls the `getMessageStream` method after all the trade pairs arre subscribed
 - `getMessageStream` method is a method on PriceOracle base class which listens to messages (price updates) from all the subscriptions through the `ws.onmessage` method of ws instances.
 - after calling the `subscribeOrderBookDataForAllTradePairs` on each PriceOracle instance,

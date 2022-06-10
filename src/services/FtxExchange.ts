@@ -4,7 +4,7 @@ import BasePriceOracle from "./BasePriceOracle";
 
 const sendOneTimeData = process.argv.slice(2)[0];
 
-export default class FtxExchange extends BasePriceOracle implements PriceOracleInstances {
+export default class FtxExchange extends BasePriceOracle implements PriceOracleExtended {
   tradePairsList: string[];
   exchangeName: string;
   orderbookhandlerMethod: "orderbook";

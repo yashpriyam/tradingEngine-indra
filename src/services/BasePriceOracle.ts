@@ -1,6 +1,12 @@
 import * as WebSocket from "ws";
 import { LogzioLogger } from "../lib/logzioLogger";
+import { checksum } from "./bifinexchecksum";
+const CRC = require('crc-32')
 
+const BOOK: any = {}
+BOOK.bids = {}
+BOOK.asks = {}
+BOOK.psnap = {}
 /** base class to get exchange data */
 class BasePriceOracle implements PriceOracle {
   private _handlers: Map<any, any>;
@@ -57,6 +63,7 @@ class BasePriceOracle implements PriceOracle {
     this._ws = new WebSocket.default(`${wsUrl}`);
 
     this._ws.onopen = () => {
+      console.log("connected");
       LogzioLogger.info("ws connected");
       this.isConnected = true;
     };
@@ -70,10 +77,11 @@ class BasePriceOracle implements PriceOracle {
     });
 
     this._ws.onclose = () => {
-      LogzioLogger.warn("ws closed");
+      LogzioLogger.warn(`ws closed for ${wsUrl}`);
     };
 
     this._ws.onerror = (err: any) => {
+      console.log({err})
       LogzioLogger.error(`web socket error : ${err}`);
     };
 
@@ -94,10 +102,13 @@ class BasePriceOracle implements PriceOracle {
     wsInstance.onmessage = (msg: { data: string }) => {
       try {
         const message = JSON.parse(msg.data);
+        console.log({message})
+        
+        // checksum(message);
 
-        if (dataFormat.messagePath === 'e') {
-          console.log({message});
-        }
+        // if (dataFormat.messagePath === 'e') {
+        //   console.log({message});
+        // }
         
         if (this.isMultiStream(message)) {
           this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
@@ -126,10 +137,12 @@ class BasePriceOracle implements PriceOracle {
           // LogzioLogger.info(message);
         }
       } catch (error) {
+        console.log({error})
         LogzioLogger.debug(`Parse message failed ${error}`);
       }
     };
   }
+
 
   /**
    * check, does message have multiple stream for a single message

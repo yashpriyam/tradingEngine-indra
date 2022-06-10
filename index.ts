@@ -10,14 +10,18 @@ import {
   LoggerAction,
   DummyArbAction,
 } from "./src/services/AllActions";
+import KucoinExchange from "./src/services/KucoinExchange";
+import BitfinexExchange from "./src/services/BitfinexExchange";
 require("dotenv").config();
 
 
 
-const priceOracleInstances = [
+const PriceOracleExtended = [
   new BinanceExchange,
   new CryptocomExchange,
-  new FtxExchange
+  new FtxExchange,
+  new KucoinExchange,
+  // new BitfinexExchange
 ]
 
 
@@ -29,9 +33,10 @@ export const allActions = {
 
 (async () => {
   try {
-    let arbStrategyInstance = await new ArbStrategy(priceOracleInstances, allActions);
+    let arbStrategyInstance = await new ArbStrategy(PriceOracleExtended, allActions);
     await arbStrategyInstance.start(checkForArbitrage);
   } catch (error) {
-    LogzioLogger.error(error);
+    console.log({error})
+    LogzioLogger.debug(error);
   }
 })();

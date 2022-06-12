@@ -1,6 +1,6 @@
 import * as WebSocket from "ws";
 import { LogzioLogger } from "../lib/logzioLogger";
-import { checksum } from "./bifinexchecksum";
+// import { checksum } from "./bifinexchecksum";
 const CRC = require('crc-32')
 
 const BOOK: any = {}

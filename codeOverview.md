@@ -1,25 +1,35 @@
 The following code is executed when the app initializes:
 
 ```typescript
-let arbitrageTriggerInstance = new ArbitrageTrigger();
-await arbitrageTriggerInstance.getAllTradePairs();
-arbitrageTriggerInstance.listenArbitrageStream();
+(async () => {
+  try {
+    let arbStrategyInstance = await new ArbStrategy(
+      PriceOracleExtended,
+      allActions
+    );
+    await arbStrategyInstance.start(checkForArbitrage);
+  } catch (error) {
+    console.log({ error });
+    LogzioLogger.debug(error);
+  }
+})();
 ```
 
-1. new instance of `ArbitrageTrigger` class is created
+1. new instance of `ArbStrategy` class is created,
+   with all the ExchangeClass instances and all the actions
 
 - this new instance has the following code in it's constructor
   ```typescript
-  constructor() {
-    super();
-    this.PriceOracleExtended = [
-        new BinanceExchange(),
-        new CryptocomExchange(),
-        new FtxExchange(),
-    ];
+  constructor(PriceOracleExtended: any[], actions: { [key: string]: any[]}) {
+    this.PriceOracleExtended = PriceOracleExtended
     this.orderBookPriceMap = {};
     this.allTradePairsExchangeMap = {};
     this.commonSymbolMap = new Map();
+    this.instance = (async () => {
+      await this.getAllTradePairs()
+      return this;
+    })();
+    return this.instance
   }
   ```
 - the `PriceOracleExtended` is an array of PriceOracle class instances of all the exchanges
@@ -86,7 +96,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
 2. `getAllTradePairs` method of this instance is called
 
 - this method first creates the `allTradePairsExchangeMap` by calling the `getTradePairsList` method on each PriceOracle instance from `PriceOracleExtended`.
-- then it calls the `createCommonSymbolMap` method of ArbitrageTrigger class
+- then it calls the `createCommonSymbolMap` method of ArbStrategy class
 - the `createCommonSymbolMap` method creates the `commonSymbolMap` and also the initial strucutre of `orderBookPriceMap`
 - it then updates the `allTradePairsExchangeMap` where now the each exchange has an object as value with mapping of it's trade pairs to their standard format, which looks like this:
 
@@ -99,7 +109,7 @@ arbitrageTriggerInstance.listenArbitrageStream();
 
 - this method also sanitizes the list of trade pairs which we'd then subscribe to, and then goes back to update all the data structures `allTradePairsExchangeMap`, `commonSymbolMap`, `orderBookPriceMap` with updated trade pairs list.
 
-3. `listenArbitrageStream` method is called on ArbitrageTrigger class, which then calls the `listenStream` method from ArbStrategy base class
+3. `listenArbitrageStream` method is called on ArbStrategy class, which then calls the `listenStream` method from ArbStrategy base class
 
 ```typescript
 listenArbitrageStream = () => {

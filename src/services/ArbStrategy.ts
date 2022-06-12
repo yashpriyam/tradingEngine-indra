@@ -91,7 +91,7 @@ class ArbStrategy implements Strategy {
           const bidPrice = bids[0][0]; // highest of bids
           const bidQuantity = bids[0][1];
 
-          console.log({orderBookPriceMap: this.orderBookPriceMap})
+          // console.log({orderBookPriceMap: this.orderBookPriceMap})
 
           // getting previous value of ask and bid
           let previousAskPrice =

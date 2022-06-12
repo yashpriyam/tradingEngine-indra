@@ -15,7 +15,7 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
   constructor() {
     super();
     // POST - https://api.kucoin.com/api/v1/bullet-public
-    this.token="2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ-f9rOi0WzcOpg9wwf5HCP3gX35LntWbF9iYB9J6i9GjsxUuhPw3BlrzazF6ghq4LwWRCJH3yBmRuh0mLLxN4hs=.ZCvMFXcMdaYv6mmjPKSLHA=="
+    this.token="2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ467w2llbQDajL9H66Zyysoq1rUt2O5_3diYB9J6i9GjsxUuhPw3BlrzazF6ghq4L7V69202y2oQzZ67hDmaAYY=.VuhKZHJiWJudxVi9UW2nqg=="
     this.wsUrl = `wss://ws-api.kucoin.com/endpoint?token=${this.token}&[connectId=randomconnectid]`;
     this.kucoinWsInstance = this._createSocket(this.wsUrl);
     this.tradePairsList = [];
@@ -39,9 +39,9 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
         tradePairs.push(symbolObj.symbolName);
       }
     });
-
-
-    tradePairs = tradePairs.slice(0,100);
+    
+    // tradePairs = tradePairs.slice(0,100);
+    // console.log({tradePairs});
 
     if (sendOneTimeData)
       LogzioLogger.info(JSON.stringify({ tradePairs }), {
@@ -68,7 +68,7 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
       const subscriberObject = {
         "id": id,                          
         "type": "subscribe",
-        "topic": `/spotMarket/level2Depth50:${tradePair}`,
+        "topic": `/market/level2:${tradePair}`,
         "response": true                              
       }
       ++id;

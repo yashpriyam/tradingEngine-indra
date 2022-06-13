@@ -15,7 +15,7 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
   constructor() {
     super();
     // POST - https://api.kucoin.com/api/v1/bullet-public
-    this.token="2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ467w2llbQDajL9H66Zyysoq1rUt2O5_3diYB9J6i9GjsxUuhPw3BlrzazF6ghq4L7V69202y2oQzZ67hDmaAYY=.VuhKZHJiWJudxVi9UW2nqg=="
+    this.token="2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ0sEUY6AvdC9MPXIBBWNTgAgUhyvregmydiYB9J6i9GjsxUuhPw3BlrzazF6ghq4L-7KYvvsbysmVoAMNUVi0GQ=.Is-WNTGo8LOM4y30oKYSPw=="
     this.wsUrl = `wss://ws-api.kucoin.com/endpoint?token=${this.token}&[connectId=randomconnectid]`;
     this.kucoinWsInstance = this._createSocket(this.wsUrl);
     this.tradePairsList = [];
@@ -53,7 +53,7 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
   };
 
   updateTradePairsList = (tradePairsArray: string[]) => {
-    // this.tradePairsList = [...tradePairsArray];
+    this.tradePairsList = [...tradePairsArray];
   };
 
   /**
@@ -62,18 +62,14 @@ export default class KucoinExchange extends BasePriceOracle implements PriceOrac
    * @returns void
    */
   subscribeOrderBookDataForAllTradePairs = async () => {
-    let id = 0;
-    
-    for (const tradePair of this.tradePairsList) {
+    const tradePairListString = this.tradePairsList.join()
       const subscriberObject = {
-        "id": id,                          
+        "id": 1234567,                          
         "type": "subscribe",
-        "topic": `/market/level2:${tradePair}`,
+        "topic": `/market/level2:${tradePairListString}`,
         "response": true                              
       }
-      ++id;
       this.subscribeStream(subscriberObject, this.kucoinWsInstance);
-    }
     this.getKucoinMessageStream();
   };
 

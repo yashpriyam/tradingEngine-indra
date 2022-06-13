@@ -65,7 +65,7 @@ export default class BinanceExchange extends BasePriceOracle implements PriceOra
     for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
         method: "SUBSCRIBE",
-        params: [`${tradePair}@depthUpdate`],
+        params: [`${tradePair}@depth`],
         id: ++id,
       };
       this.subscribeStream(subscriberObject, this.binanceWsInstance);

@@ -9,7 +9,8 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
   exchangeName: "bitfinex";
   orderbookhandlerMethod: string;
   private wsUrl: string;
-  private bitfinexWsInstance: {};
+  private bitfinexWsInstance: any;
+  private localChanIdPairMap: {}
 
   constructor() {
     super();
@@ -17,7 +18,8 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
     this.bitfinexWsInstance = this._createSocket(this.wsUrl);
     this.tradePairsList = ["tBTCUSD", "tETHUSD"];
     this.exchangeName = "bitfinex";
-    this.orderbookhandlerMethod = "";
+    this.orderbookhandlerMethod = "bitfinex";
+    this.localChanIdPairMap = {}
   }
 
   /**
@@ -27,27 +29,27 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
   getTradePairsList = async () => {
     let tradePairs: any = [];
 
-    let allTradePairs : string[] = [];
+    let allTradePairs: string[] = [];
 
     let tradePairsList = await axios.get(
       "https://api-pub.bitfinex.com/v2/conf/pub:list:pair:exchange"
     );
 
-    tradePairsList.data && tradePairsList.data[0].forEach((singleTradePair:string)=>{
+    tradePairsList.data && tradePairsList.data[0].forEach((singleTradePair: string) => {
       allTradePairs.push("t" + singleTradePair.split(":").join(""));
     })
 
 
-   let queryParamsForTicker = allTradePairs.join(",");
+    let queryParamsForTicker = allTradePairs.join(",");
 
-   // get ticker data for getting trading volumne
+    // get ticker data for getting trading volumne
     const ticketData = await axios.get(`https://api-pub.bitfinex.com/v2/tickers/?symbols=${queryParamsForTicker}`)
 
     //  Filter using daily trading volumne
-    ticketData.data && ticketData.data.forEach((tickerDataForSingleTradePair : any)=>{
-      let dailyTradingVolume = tickerDataForSingleTradePair[tickerDataForSingleTradePair.length-3];
+    ticketData.data && ticketData.data.forEach((tickerDataForSingleTradePair: any) => {
+      let dailyTradingVolume = tickerDataForSingleTradePair[tickerDataForSingleTradePair.length - 3];
 
-      if(dailyTradingVolume > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)){
+      if (dailyTradingVolume > Number(process.env.DAILY_TRADE_VOLUME_LIMIT)) {
         tradePairs.push(tickerDataForSingleTradePair[0].substring(1));
       }
     })
@@ -62,7 +64,7 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
   };
 
   updateTradePairsList = (tradePairsArray: string[]) => {
-    // this.tradePairsList = [...tradePairsArray];
+    this.tradePairsList = [...tradePairsArray];
   };
 
   /**
@@ -70,13 +72,13 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
    * for every trade pair
    * @returns void
    */
-  subscribeOrderBookDataForAllTradePairs = async () => {   
+  subscribeOrderBookDataForAllTradePairs = async () => {
 
     for (const tradePair of this.tradePairsList) {
       const subscriberObject = {
-        event: 'subscribe', 
-        channel: 'book', 
-        symbol: tradePair 
+        event: 'subscribe',
+        channel: 'book',
+        symbol: tradePair
       };
       // this.subscribeStream({ event: 'conf', flags: 131072 }, this.bitfinexWsInstance);
       this.subscribeStream(subscriberObject, this.bitfinexWsInstance);
@@ -84,7 +86,6 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
     this.getBitfinexMessageStream();
   };
 
-  
   /**
    * call the base class method "getMessageStream" for
    * getting message for binance exchange and pass a data format to it.
@@ -95,8 +96,6 @@ export default class BitfinexExchange extends BasePriceOracle implements PriceOr
 
     this.getMessageStream(this.bitfinexWsInstance, {
       // checksum: true
-    });
+    }, this);
   };
-
-  
 }

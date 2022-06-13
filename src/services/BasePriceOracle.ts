@@ -12,9 +12,11 @@ class BasePriceOracle implements PriceOracle {
   private _handlers: Map<any, any>;
   private isConnected: boolean;
   private _ws: any;
+  private bitfinexOrderBook: {};
   constructor() {
     this._handlers = new Map();
     this.isConnected = false;
+    this.bitfinexOrderBook = {}
   }
 
   /**
@@ -63,7 +65,6 @@ class BasePriceOracle implements PriceOracle {
     this._ws = new WebSocket.default(`${wsUrl}`);
 
     this._ws.onopen = () => {
-      console.log("connected");
       LogzioLogger.info("ws connected");
       this.isConnected = true;
     };
@@ -81,7 +82,6 @@ class BasePriceOracle implements PriceOracle {
     };
 
     this._ws.onerror = (err: any) => {
-      console.log({err})
       LogzioLogger.error(`web socket error : ${err}`);
     };
 
@@ -98,18 +98,52 @@ class BasePriceOracle implements PriceOracle {
    * @param dataFormat an object having paths for different values
    * @returns void
    */
-  getMessageStream(wsInstance: any, dataFormat: any) {
+  getMessageStream(wsInstance: any, dataFormat: any, exchangeInstance?: any) {
     wsInstance.onmessage = (msg: { data: string }) => {
       try {
         const message = JSON.parse(msg.data);
-        console.log({message})
+        console.log({message});
         
-        // checksum(message);
 
-        // if (dataFormat.messagePath === 'e') {
-        //   console.log({message});
-        // }
-        
+        if (exchangeInstance?.exchangeName === 'bitfinex' && message?.event === 'subscribed') {
+          exchangeInstance.localChanIdPairMap[message.chanId] = message.pair
+        }
+
+        if (!dataFormat.methodPath && exchangeInstance?.exchangeName === 'bitfinex' && !message.event) {
+          this._handlers.get(exchangeInstance.exchangeName)
+            .forEach((cb: (arg0: any) => any) => {
+              const symbol = exchangeInstance.localChanIdPairMap[message[0]]
+              const [price, count, amount]: [number, number, number] = message[1]
+              const [asks, bids]: any[] = [[], []]
+
+              if (count > 0) {
+                if (amount > 0) {
+                  // update bid price
+                  bids.push([price, amount])
+                }
+                if (amount < 0) {
+                  // update ask price
+                  asks.push([price, amount])
+                }
+              }
+              if (count === 0) {
+                if (amount === 1) {
+                  // remove from bid
+                  bids.push(['', ''])
+                }
+                if (amount === -1) {
+                  // remove from ask
+                  asks.push(['', ''])
+                }
+              }
+              cb({
+                asks,
+                bids,
+                symbol,
+                data: message,
+              })
+            })
+        }
         if (this.isMultiStream(message)) {
           this._handlers.get(message.stream).forEach((cb: (arg0: any) => any) =>
             cb({
@@ -137,7 +171,6 @@ class BasePriceOracle implements PriceOracle {
           // LogzioLogger.info(message);
         }
       } catch (error) {
-        console.log({error})
         LogzioLogger.debug(`Parse message failed ${error}`);
       }
     };

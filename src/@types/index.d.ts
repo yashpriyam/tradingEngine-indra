@@ -23,7 +23,7 @@ interface Action {
 }
 interface PriceOracle {
   setHandler(method: string, callback: (params: any) => void): void
-  getMessageStream(wsInstance: any, dataFormat: any): void
+  getMessageStream(wsInstance: any, dataFormat: any, exchangeInstance?: any): void
   _createSocket(wsUrl: string): any
   subscribeStream(subscriberObject: Object, wsInstance: any): void
 }

@@ -21,7 +21,7 @@ const PriceOracleExtended = [
   new CryptocomExchange,
   new FtxExchange,
   new KucoinExchange,
-  // new BitfinexExchange
+  new BitfinexExchange
 ]
 
 

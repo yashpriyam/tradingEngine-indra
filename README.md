@@ -124,7 +124,7 @@ We use these class methods to log any type of message in our application.
     
     
    
-   
+### Code Overview
 The following code is executed when the app initializes:
 
 ```typescript
